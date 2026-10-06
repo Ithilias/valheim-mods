@@ -1,0 +1,28 @@
+<Project>
+
+  <!-- Settings shared by every mod in this repository. -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.1</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <DebugType>none</DebugType>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <NoWarn>CS0649;CS0169;MSB3277</NoWarn>
+    <!-- Keep the DLL's version exactly the manifest's, without a commit hash appended. -->
+    <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
+    <GenerateDependencyFile>false</GenerateDependencyFile>
+  </PropertyGroup>
+
+  <!-- Where the game and BepInEx live. Set them in Directory.Build.local.props (see the README),
+       as environment variables, or with -p:GameManaged=... -p:BepInExCore=... -->
+  <Import Project="Directory.Build.local.props" Condition="Exists('Directory.Build.local.props')" />
+  <PropertyGroup>
+    <GameManaged Condition="'$(GameManaged)' == ''">$(VALHEIM_MANAGED)</GameManaged>
+    <BepInExCore Condition="'$(BepInExCore)' == ''">$(BEPINEX_CORE)</BepInExCore>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="src/**/*.cs" />
+  </ItemGroup>
+
+</Project>

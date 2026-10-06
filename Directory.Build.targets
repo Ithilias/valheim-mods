@@ -1,0 +1,75 @@
+<Project>
+
+  <!-- Each mod lists the game assemblies it needs as GameAssembly items; BepInEx and Harmony are
+       always referenced. Nothing is copied to the output: the game provides all of them. -->
+  <ItemGroup>
+    <BepInExAssembly Include="BepInEx;0Harmony" />
+    <Reference Include="@(BepInExAssembly)" HintPath="$(BepInExCore)/%(Identity).dll" Private="false" />
+    <Reference Include="@(GameAssembly)" HintPath="$(GameManaged)/%(Identity).dll" Private="false" />
+  </ItemGroup>
+
+  <Target Name="CheckGamePaths" BeforeTargets="ResolveAssemblyReferences">
+    <Error Condition="!Exists('$(GameManaged)/assembly_valheim.dll')"
+           Text="Valheim not found. Set GameManaged to the game's valheim_Data/Managed folder (see the README)." />
+    <Error Condition="!Exists('$(BepInExCore)/BepInEx.dll')"
+           Text="BepInEx not found. Set BepInExCore to a BepInEx/core folder (see the README)." />
+    <Error Condition="!Exists('$(BepInExCore)/%(BepInExAssembly.Identity).dll')"
+           Text="%(BepInExAssembly.Identity).dll not found in $(BepInExCore)." />
+    <Error Condition="!Exists('$(GameManaged)/%(GameAssembly.Identity).dll')"
+           Text="%(GameAssembly.Identity).dll not found in $(GameManaged). Check the GameAssembly names in the project file." />
+  </Target>
+
+  <!-- manifest.json is the single source of truth for the version: Hexium rejects a package whose
+       DLL reports a different version. It is read again on every build rather than only when the
+       project is loaded, so an IDE that keeps projects loaded still picks up a version bump. -->
+  <PropertyGroup Condition="Exists('$(MSBuildProjectDirectory)/manifest.json')">
+    <HasManifest>true</HasManifest>
+    <Version>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/manifest.json")), '(?&lt;=&quot;version_number&quot;\s*:\s*&quot;)[^&quot;]+'))</Version>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(HasManifest)' == 'true'">
+    <UpToDateCheckInput Include="manifest.json" />
+  </ItemGroup>
+
+  <Target Name="ReadManifestVersion" BeforeTargets="GetAssemblyVersion;GeneratePluginVersion" Condition="'$(HasManifest)' == 'true'">
+    <PropertyGroup>
+      <ManifestVersion>$([System.Text.RegularExpressions.Regex]::Match($([System.IO.File]::ReadAllText("$(MSBuildProjectDirectory)/manifest.json")), '(?&lt;=&quot;version_number&quot;\s*:\s*&quot;)[^&quot;]+'))</ManifestVersion>
+    </PropertyGroup>
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(ManifestVersion)', '^\d+\.\d+\.\d+$'))"
+           Text="manifest.json: version_number is missing or not in Major.Minor.Patch form." />
+    <!-- Set inside a target, this also wins over -p:Version, so the DLL cannot disagree. -->
+    <PropertyGroup>
+      <Version>$(ManifestVersion)</Version>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="GeneratePluginVersion" BeforeTargets="CoreCompile" Condition="'$(HasManifest)' == 'true'">
+    <PropertyGroup>
+      <GeneratedVersionFile>$(IntermediateOutputPath)PluginVersion.g.cs</GeneratedVersionFile>
+    </PropertyGroup>
+    <ItemGroup>
+      <VersionLines Include="// Generated from manifest.json at build time. Do not edit." />
+      <VersionLines Include="namespace $(RootNamespace)" />
+      <VersionLines Include="{" />
+      <VersionLines Include="    internal static class PluginVersion" />
+      <VersionLines Include="    {" />
+      <VersionLines Include="        internal const string Value = &quot;$(ManifestVersion)&quot;%3B" />
+      <VersionLines Include="    }" />
+      <VersionLines Include="}" />
+    </ItemGroup>
+    <WriteLinesToFile File="$(GeneratedVersionFile)" Lines="@(VersionLines)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+    <ItemGroup>
+      <Compile Include="$(GeneratedVersionFile)" />
+      <FileWrites Include="$(GeneratedVersionFile)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Optional copy into a BepInEx plugins folder for quick testing:
+       dotnet build <Mod> -c Release -p:PluginTarget=/path/to/BepInEx/plugins/<Mod> -->
+  <Target Name="DeployPlugin" AfterTargets="Build" Condition="'$(PluginTarget)' != ''">
+    <MakeDir Directories="$(PluginTarget)" />
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(PluginTarget)" />
+    <Message Importance="high" Text="Deployed $(TargetFileName) to $(PluginTarget)" />
+  </Target>
+
+</Project>
