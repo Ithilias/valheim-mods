@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <AssemblyName>SnappySync</AssemblyName>
+    <RootNamespace>SnappySync</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <GameAssembly Include="assembly_valheim;assembly_utils" />
+    <GameAssembly Include="UnityEngine;UnityEngine.CoreModule;UnityEngine.PhysicsModule" />
+  </ItemGroup>
+
+</Project>

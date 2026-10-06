@@ -1,0 +1,9 @@
+{
+  "name": "SnappySync",
+  "version_number": "0.1.1",
+  "website_url": "https://github.com/Ithilias/valheim-mods",
+  "description": "Creatures and other players catch up to where they really are faster, so knockbacks and dodges show up sooner. Client side, visual only.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2350"
+  ]
+}
