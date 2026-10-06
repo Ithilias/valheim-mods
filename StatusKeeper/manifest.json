@@ -1,0 +1,9 @@
+{
+  "name": "StatusKeeper",
+  "version_number": "1.1.3",
+  "website_url": "https://github.com/Ithilias/valheim-mods",
+  "description": "Keep your Rested bonus and other timed buffs when you log out and back in, instead of losing them every rejoin.",
+  "dependencies": [
+    "denikson-BepInExPack_Valheim-5.4.2350"
+  ]
+}
