@@ -88,7 +88,10 @@ namespace RoundMinimap
                 BiomeLabelStyle.Apply(__instance);
 
                 // Last, so it measures the map where this frame left it.
-                StatusEffectClearance.Apply(__instance);
+                RunIsolated(ref _statusLayoutFailed, "Status effect layout", StatusEffectClearance.Apply, __instance,
+                    StatusEffectClearance.Restore);
+                RunIsolated(ref _shipLayoutFailed, "Sailing display layout", ShipHudClearance.Apply, __instance,
+                    ShipHudClearance.Restore);
             }
             catch (System.Exception e)
             {
@@ -107,13 +110,32 @@ namespace RoundMinimap
         private static void HudUpdateStatusEffectsPostfix(Hud __instance)
         {
             if (!Plugin.ModEnabled.Value) return;
+            RunIsolated(ref _statusLayoutFailed, "Status effect layout", StatusEffectClearance.OnIconsRebuilt, __instance,
+                StatusEffectClearance.Restore);
+        }
+
+        private static bool _statusLayoutFailed;
+        private static bool _shipLayoutFailed;
+
+        /// <summary>
+        /// The status effect and sailing display layouts reach into the game's HUD, which a game
+        /// update can change. If one fails, only that part is switched off for the session, with one
+        /// log entry, and the rest of the mod keeps working.
+        /// </summary>
+        private static void RunIsolated<T>(ref bool failed, string what, System.Action<T> action, T target,
+            System.Action restore)
+        {
+            if (failed) return;
             try
             {
-                StatusEffectClearance.OnIconsRebuilt(__instance);
+                action(target);
             }
             catch (System.Exception e)
             {
-                Plugin.Log.LogError($"Status effect layout failed: {e}");
+                failed = true;
+                Plugin.Log.LogError($"{what} failed, leaving it to the game for this session: {e}");
+                try { restore(); }
+                catch (System.Exception) { /* already reported */ }
             }
         }
 
@@ -125,6 +147,7 @@ namespace RoundMinimap
             BiomeLabelStyle.Remove();
             MinimapShape.RestorePlacement(map);
             StatusEffectClearance.Restore();
+            ShipHudClearance.Restore();
             if (!string.IsNullOrEmpty(_appliedHiddenElements))
             {
                 MinimapShape.ApplyHiddenElements(map, Split(_appliedHiddenElements), hidden: false);

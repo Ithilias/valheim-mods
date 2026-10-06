@@ -26,6 +26,7 @@ namespace RoundMinimap
         private static bool _captured;
         private static Vector2 _originalPosition;
         private static bool _anyMoved;
+        private static readonly List<TMP_Text> _texts = new List<TMP_Text>();
 
         public static void Attach(Hud hud)
         {
@@ -75,6 +76,11 @@ namespace RoundMinimap
         private static float BaselineDrop(TMP_Text name)
         {
             if (!name.enableAutoSizing || !name.isActiveAndEnabled) return 0f;
+            // A freshly created icon is not laid out until the canvas next rebuilds; do it now so a
+            // new effect's name does not show at the raised position for a frame.
+            if (name.havePropertiesChanged && !string.IsNullOrEmpty(name.text)
+                && (name.textInfo == null || name.textInfo.characterCount == 0))
+                name.ForceMeshUpdate();
             var info = name.textInfo;
             if (info == null || info.characterCount == 0 || info.lineCount == 0) return 0f;
 
@@ -92,11 +98,16 @@ namespace RoundMinimap
         private static TMP_Text FindName(RectTransform icon)
         {
             if (icon == null) return null;
-            foreach (var text in icon.GetComponentsInChildren<TMP_Text>(true))
+            icon.GetComponentsInChildren(true, _texts);
+            TMP_Text found = null;
+            foreach (var text in _texts)
             {
-                if (text.name != TimeTextName) return text;
+                if (text.name == TimeTextName) continue;
+                found = text;
+                break;
             }
-            return null;
+            _texts.Clear();
+            return found;
         }
     }
 }

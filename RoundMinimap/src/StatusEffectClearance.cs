@@ -37,6 +37,8 @@ namespace RoundMinimap
         private static float _gameSpacing;
         private static float _appliedSpacing;
         private static float _appliedRowSpacing;
+        private static int _layoutCount = -1;
+        private static RectTransform _layoutFirst;
 
         private static readonly List<HotkeyBar> _hotbars = new List<HotkeyBar>();
         private static float _nextObstacleRefresh;
@@ -46,6 +48,7 @@ namespace RoundMinimap
         private static FieldInfo _clockField;
 
         private static readonly Vector3[] Corners = new Vector3[4];
+        private static readonly List<TMP_Text> _texts = new List<TMP_Text>();
 
         public static void Apply(Minimap map)
         {
@@ -63,6 +66,8 @@ namespace RoundMinimap
                 _gameSpacing = hud.m_statusEffectSpacing;
                 _appliedSpacing = _gameSpacing;
                 _appliedRowSpacing = _gameSpacing;
+                _layoutCount = -1;
+                _layoutFirst = null;
                 _hotbars.Clear();
                 _nextObstacleRefresh = 0f;
                 StatusNameStyle.Attach(hud);
@@ -86,22 +91,33 @@ namespace RoundMinimap
             // shift is being worked out for.
             Place(_appliedShift, _appliedPerRow, spacingLocal, rowSpacingLocal);
 
+            // The large map covers the HUD anyway; keep the placement for when it closes.
+            if (map.m_mode == Minimap.MapMode.Large) return;
+
+            float spacing = LocalToWorld(root, new Vector2(spacingLocal, 0f)).x;
+            float rowSpacing = LocalToWorld(root, new Vector2(0f, rowSpacingLocal)).y;
+
             // With no icons showing there is nothing to measure, so keep the last placement rather
             // than snapping back and forth as effects come and go.
-            if (!Measure(icons, out float right, out float top, out Vector2 iconSize, out int count)) return;
+            if (!Measure(icons, spacing, rowSpacing, out float right, out float top, out Vector2 iconSize, out int count))
+                return;
             if (!MinimapShape.TryGetFootprint(map, out Vector3 vanillaCentre, out Vector2 vanillaHalf,
                     out Vector3 currentCentre, out Vector2 currentHalf))
                 return;
 
-            // Undo our own shift so everything is measured from where vanilla put the icons. The
-            // first icon of each row stays put whatever the row length, so the right and top edges
-            // do not depend on how the rows are currently wrapped.
+            // No small map on screen (a world without a map, or the player is dead): nothing to make
+            // room for, so measure as if the map were vanilla.
+            if (map.m_smallRoot == null || !map.m_smallRoot.activeInHierarchy)
+            {
+                currentCentre = vanillaCentre;
+                currentHalf = vanillaHalf;
+            }
+
+            // Undo our own shift so everything is measured from where vanilla put the icons.
             Vector2 appliedWorld = LocalToWorld(root, _appliedShift);
             Vector2 manualWorld = LocalToWorld(root, manual);
             right -= appliedWorld.x;
             top -= appliedWorld.y;
-            float spacing = LocalToWorld(root, new Vector2(spacingLocal, 0f)).x;
-            float rowSpacing = LocalToWorld(root, new Vector2(0f, rowSpacingLocal)).y;
 
             // -1 when the icons sit left of the map, +1 when right.
             float side = right < vanillaCentre.x ? -1f : 1f;
@@ -136,7 +152,8 @@ namespace RoundMinimap
                                  && currentCentre.y + currentHalf.y > bandBottom;
                 if (besideMap)
                 {
-                    float nearEdge = (side < 0f ? right : left) + manualWorld.x;
+                    // Worked out without the manual offset, which always goes on top of it.
+                    float nearEdge = side < 0f ? right : left;
                     float wanted = currentMapEdge + side * vanillaGap;
                     if ((nearEdge - wanted) * side < 0f) shift = wanted - nearEdge;
                 }
@@ -205,14 +222,24 @@ namespace RoundMinimap
         }
 
         /// <summary>
-        /// Called right after the game rebuilds the icons, which happens whenever the number of
-        /// effects changes. The game knows nothing of the shift or a separate row spacing, so the
-        /// icons are put back where this layout wants them before the frame is drawn.
+        /// Called after the game's status effect update. The game knows nothing of the shift or a
+        /// separate row spacing, so after it rebuilds the icons they are put back where this layout
+        /// wants them before the frame is drawn.
         /// </summary>
         public static void OnIconsRebuilt(Hud hud)
         {
-            if (!ReferenceEquals(hud, _hud) || IsVanillaLayout) return;
-            Relayout();
+            if (!ReferenceEquals(hud, _hud)) return;
+
+            // The game calls this every frame but only lays the icons out when their number
+            // changes, which also replaces them all.
+            var icons = IconsRef(hud);
+            int count = icons != null ? icons.Count : 0;
+            RectTransform first = count > 0 ? icons[0] : null;
+            if (count == _layoutCount && ReferenceEquals(first, _layoutFirst)) return;
+            _layoutCount = count;
+            _layoutFirst = first;
+
+            if (!IsVanillaLayout) Relayout();
         }
 
         private static bool IsVanillaLayout =>
@@ -237,22 +264,28 @@ namespace RoundMinimap
         }
 
         /// <summary>
-        /// World-space right and top edges of the icon block, the size of the largest icon, and the
-        /// count. Each icon counts with its name and timer text, since those are wider than the
-        /// icon itself and are what actually runs into things.
+        /// World-space right and top edges of the icon block as if every icon sat in the first slot,
+        /// the size of the largest icon, and the count. Each icon counts with its name and timer
+        /// text, since those are wider than the icon itself and are what actually runs into things.
+        /// Measuring every icon from its own slot keeps the result the same whatever the current
+        /// row length; measuring only the first column would change with it, as a long name moves
+        /// in or out of that column, and the row length could flip back and forth every frame.
         /// </summary>
-        private static bool Measure(List<RectTransform> icons, out float right, out float top,
-            out Vector2 iconSize, out int count)
+        private static bool Measure(List<RectTransform> icons, float spacing, float rowSpacing,
+            out float right, out float top, out Vector2 iconSize, out int count)
         {
             right = top = float.MinValue;
             iconSize = Vector2.zero;
             count = 0;
-            foreach (var icon in icons)
+            for (int i = 0; i < icons.Count; i++)
             {
+                var icon = icons[i];
                 if (icon == null || !icon.gameObject.activeSelf) continue;
+                int row = i / _appliedPerRow;
+                int col = i - row * _appliedPerRow;
                 Rect bounds = ContentBounds(icon);
-                right = Mathf.Max(right, bounds.xMax);
-                top = Mathf.Max(top, bounds.yMax);
+                right = Mathf.Max(right, bounds.xMax + col * spacing);
+                top = Mathf.Max(top, bounds.yMax + row * rowSpacing);
                 iconSize = Vector2.Max(iconSize, bounds.size);
                 count++;
             }
@@ -263,7 +296,8 @@ namespace RoundMinimap
         {
             icon.GetWorldCorners(Corners);
             float xMin = Corners[0].x, yMin = Corners[0].y, xMax = Corners[2].x, yMax = Corners[1].y;
-            foreach (var text in icon.GetComponentsInChildren<TMP_Text>(false))
+            icon.GetComponentsInChildren(false, _texts);
+            foreach (var text in _texts)
             {
                 if (!TryGetTextBounds(text, out Rect t)) continue;
                 xMin = Mathf.Min(xMin, t.xMin);
@@ -271,6 +305,7 @@ namespace RoundMinimap
                 xMax = Mathf.Max(xMax, t.xMax);
                 yMax = Mathf.Max(yMax, t.yMax);
             }
+            _texts.Clear();
             return Rect.MinMaxRect(xMin, yMin, xMax, yMax);
         }
 
@@ -279,6 +314,11 @@ namespace RoundMinimap
         {
             bounds = default;
             if (text == null || !text.isActiveAndEnabled || string.IsNullOrEmpty(text.text)) return false;
+            // A freshly created icon has its text set but not laid out until the canvas next
+            // rebuilds; lay it out now rather than measure nothing for a frame. Only pending
+            // changes count, so a text that lays out to nothing is not forced every frame.
+            if (text.havePropertiesChanged && (text.textInfo == null || text.textInfo.characterCount == 0))
+                text.ForceMeshUpdate();
             Bounds local = text.textBounds;
             if (local.size.x <= 0f || local.size.y <= 0f) return false;
             Vector3 min = text.transform.TransformPoint(local.min);

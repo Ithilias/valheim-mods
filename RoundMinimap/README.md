@@ -18,6 +18,8 @@ always at the top. No more mentally rotating the map every time you turn around.
   icons, they move aside, and wrap into shorter rows rather than run into the hotbar, the
   ValheimPlus clock or off the screen. Long names like Boon of the Lox line up with the
   others.
+- **Sailing display stays clear.** While you steer a ship, the sail and wind display moves down
+  below a bigger or moved map instead of being covered by it.
 - **Readable biome name.** The biome name sits centred under the map, and can get a background box and
   border so it stands out over bright ground.
 - **Zoom in and out.** Keypad + and Keypad - by default. The zoom level is remembered between
@@ -37,8 +39,8 @@ The three looks, one switch each:
 | The vanilla square map | `Round minimap` off |
 
 Rotation, resizing, the compass and most layout settings belong to the round map. The square map is
-kept exactly vanilla, apart from `Map offset`, the biome label box and the status effect settings,
-which work on both.
+kept exactly vanilla, apart from `Map offset`, the biome label box, the status effect settings and
+the sailing display, which work on both.
 
 ## Installing
 
@@ -91,18 +93,13 @@ Round map only.
 | --- | --- | --- |
 | Map offset X | `0` | Moves the whole map sideways, in pixels. Negative is left |
 | Map offset Y | `0` | Moves the whole map up or down, in pixels. Negative is down |
+| Move sailing display below map | `true` | While steering a ship, moves the sail and wind display down when a bigger or moved map would cover it |
 | Hide square background | `true` | Hides the square panel that would stick out past the circle |
 | Center biome label below map | `true` | |
 | Biome label gap | `8` | |
 | Pull wind marker inside circle | `true` | |
 | Wind marker distance | `0.8` | |
 | Hidden elements | `""` | Names of extra HUD pieces to hide, if something is left over |
-
-### 4 - Debug
-
-| Setting | Default | What it does |
-| --- | --- | --- |
-| Dump hierarchy key | `Ctrl+F9` | Logs the minimap's UI pieces to the BepInEx log, see below |
 
 ### 5 - Compass
 
@@ -160,6 +157,12 @@ place them yourself, turn `Make room for status effects` off and use `Offset X`,
 | Edge margin | `8` | Free pixels kept to the screen edge, hotbars and the ValheimPlus clock |
 | Offset X | `0` | Moves the icons sideways by hand, for HUD layouts the mod does not know about. Negative is left |
 | Offset Y | `0` | Moves the icons up or down by hand. Negative is down |
+
+### 9 - Debug
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| Dump hierarchy key | `Ctrl+F9` | Logs the minimap's UI pieces to the BepInEx log, see below |
 
 ## If something looks wrong
 
