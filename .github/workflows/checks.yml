@@ -1,0 +1,23 @@
+name: Checks
+
+on:
+  pull_request:
+    # edited: re-check when the title changes, since it becomes the squash commit message.
+    types: [opened, synchronize, reopened, edited]
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run repository checks
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          BASE_REF: origin/${{ github.base_ref }}
+        run: .github/scripts/checks.sh "$BASE_REF"

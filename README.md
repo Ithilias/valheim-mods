@@ -49,7 +49,9 @@ A mod's version lives only in its `manifest.json`; the build writes it into the 
 
 Issues and pull requests are welcome. Commit messages follow
 [Conventional Commits](https://www.conventionalcommits.org), scoped to the mod where it applies,
-for example `fix(roundminimap): respect map filters`.
+for example `fix(roundminimap): respect map filters`. Pull requests run
+`.github/scripts/checks.sh`, which checks version bumps, CHANGELOG entries and config names; run
+it locally before pushing.
 
 ## License
 
