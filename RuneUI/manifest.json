@@ -1,0 +1,7 @@
+{
+  "name": "RuneUI",
+  "version_number": "0.1.0",
+  "website_url": "https://github.com/Ithilias/valheim-mods",
+  "description": "A new HUD: themed bars and hotbar at the bottom centre, a second quick bar on Alt+1-8, and a party list with nearby players' health.",
+  "dependencies": [ "denikson-BepInExPack_Valheim-5.4.2350" ]
+}
