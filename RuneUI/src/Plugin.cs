@@ -24,12 +24,21 @@ namespace RuneUI
         internal static ConfigEntry<Color> HealthColor;
         internal static ConfigEntry<Color> StaminaColor;
         internal static ConfigEntry<Color> EitrColor;
+        internal static ConfigEntry<Color> StaggerColor;
+        internal static ConfigEntry<Color> Quality1Color;
+        internal static ConfigEntry<Color> Quality2Color;
+        internal static ConfigEntry<Color> Quality3Color;
+        internal static ConfigEntry<Color> Quality4Color;
+        internal static ConfigEntry<Color> QualityAboveMaxColor;
 
         internal static ConfigEntry<string> FontName;
         internal static ConfigEntry<float> FontScale;
 
         internal static ConfigEntry<float> CornerRadius;
         internal static ConfigEntry<float> BorderWidth;
+        internal static ConfigEntry<float> BarShading;
+        internal static ConfigEntry<bool> QualityRings;
+        internal static ConfigEntry<float> QualityRingWidth;
 
         internal static ConfigEntry<float> HudScale;
         internal static ConfigEntry<bool> ReplaceBars;
@@ -37,14 +46,21 @@ namespace RuneUI
         internal static ConfigEntry<float> BarsOffsetX;
         internal static ConfigEntry<float> BarsOffsetY;
         internal static ConfigEntry<float> BarsWidth;
+        internal static ConfigEntry<bool> StackBars;
+        internal static ConfigEntry<float> StackGap;
+        internal static ConfigEntry<bool> StackKeyHints;
+        internal static ConfigEntry<float> KeyHintsSpacing;
         internal static ConfigEntry<bool> MoveHotbar;
         internal static ConfigEntry<bool> StyleHotbar;
         internal static ConfigEntry<HudAnchor> HotbarAnchor;
         internal static ConfigEntry<float> HotbarOffsetX;
         internal static ConfigEntry<float> HotbarOffsetY;
-        internal static ConfigEntry<HudAnchor> FoodAnchor;
-        internal static ConfigEntry<float> FoodOffsetX;
-        internal static ConfigEntry<float> FoodOffsetY;
+        internal static ConfigEntry<bool> PowerSlot;
+        internal static ConfigEntry<bool> UnifyBuffs;
+        internal static ConfigEntry<HudAnchor> BuffsAnchor;
+        internal static ConfigEntry<float> BuffsOffsetX;
+        internal static ConfigEntry<float> BuffsOffsetY;
+        internal static ConfigEntry<int> BuffsPerRow;
 
         internal static ConfigEntry<bool> QuickBarEnabled;
         internal static ConfigEntry<KeyCode> QuickBarModifier;
@@ -60,6 +76,18 @@ namespace RuneUI
         internal static ConfigEntry<float> PartyOffsetX;
         internal static ConfigEntry<float> PartyOffsetY;
         internal static ConfigEntry<float> PartyWidth;
+
+        internal static ConfigEntry<bool> FoodSlotsEnabled;
+        internal static ConfigEntry<FirstFoodKey> FoodFirstKey;
+        internal static ConfigEntry<float> FoodInventoryOffsetX;
+        internal static ConfigEntry<float> FoodInventoryOffsetY;
+
+        internal static ConfigEntry<bool> SkillToastsEnabled;
+        internal static ConfigEntry<float> SkillToastsDuration;
+        internal static ConfigEntry<int> SkillToastsMax;
+        internal static ConfigEntry<HudAnchor> SkillToastsAnchor;
+        internal static ConfigEntry<float> SkillToastsOffsetX;
+        internal static ConfigEntry<float> SkillToastsOffsetY;
 
         private Harmony _harmony;
 
@@ -87,6 +115,18 @@ namespace RuneUI
                 "Stamina bar fill.");
             EitrColor = Config.Bind("2 - Colors", "Eitr bar", new Color(0.50f, 0.38f, 0.92f, 1f),
                 "Eitr bar fill.");
+            StaggerColor = Config.Bind("2 - Colors", "Stagger bar", new Color(0.85f, 0.87f, 0.92f, 1f),
+                "Stagger bar fill. The bar shows while you are taking hits and fills up as you get close to being staggered.");
+            Quality1Color = Config.Bind("2 - Colors", "Quality 1", new Color(0.62f, 0.62f, 0.62f, 1f),
+                "Ring around upgradable items at quality 1.");
+            Quality2Color = Config.Bind("2 - Colors", "Quality 2", new Color(0.30f, 0.80f, 0.30f, 1f),
+                "Ring around items at quality 2.");
+            Quality3Color = Config.Bind("2 - Colors", "Quality 3", new Color(0.25f, 0.55f, 1f, 1f),
+                "Ring around items at quality 3.");
+            Quality4Color = Config.Bind("2 - Colors", "Quality 4", new Color(1f, 0.78f, 0.15f, 1f),
+                "Ring around items at quality 4.");
+            QualityAboveMaxColor = Config.Bind("2 - Colors", "Quality above max", new Color(0.92f, 0.18f, 0.15f, 1f),
+                "Ring around items upgraded past their normal maximum, shown with the quality number.");
 
             FontName = Config.Bind("3 - Font", "Font name", "",
                 "Name of a TextMeshPro font loaded by the game, for example Norse SDF or AveriaSerifLibre-Bold SDF. " +
@@ -101,30 +141,54 @@ namespace RuneUI
             BorderWidth = Config.Bind("4 - Shape", "Border width", 1.5f,
                 new ConfigDescription("Border thickness in pixels. 0 draws no border.",
                     new AcceptableValueRange<float>(0f, 6f)));
+            BarShading = Config.Bind("4 - Shape", "Bar shading", 0.5f,
+                new ConfigDescription("Fades bars from light at the top to dark at the bottom for a 3D look. 0 keeps them flat.",
+                    new AcceptableValueRange<float>(0f, 1f)));
+            QualityRings = Config.Bind("4 - Shape", "Quality rings", true,
+                "Draw a ring in the quality colour around upgradable items in the hotbars, inventory and containers.");
+            QualityRingWidth = Config.Bind("4 - Shape", "Quality ring width", 2.5f,
+                new ConfigDescription("Thickness of the quality ring in pixels.",
+                    new AcceptableValueRange<float>(1f, 8f)));
 
             HudScale = Config.Bind("5 - HUD layout", "HUD scale", 1f,
                 new ConfigDescription("Size of the bars, hotbar, quick bar, food and party list.",
                     new AcceptableValueRange<float>(0.5f, 2f)));
             ReplaceBars = Config.Bind("5 - HUD layout", "Replace bars", true,
-                "Hide the vanilla health, food, stamina, eitr and adrenaline displays and show this mod's bars and food row instead.");
+                "Hide the vanilla health, food, stamina, eitr, adrenaline and stagger displays and show this mod's bars instead. Eaten food then shows with the buffs.");
             BarsAnchor = Config.Bind("5 - HUD layout", "Bars anchor", HudAnchor.Bottom,
                 "Screen point the bars are placed relative to.");
-            BarsOffsetX = Config.Bind("5 - HUD layout", "Bars offset X", 0f, "Horizontal offset from the anchor.");
-            BarsOffsetY = Config.Bind("5 - HUD layout", "Bars offset Y", 172f, "Vertical offset from the anchor.");
+            BarsOffsetX = BindOffset("5 - HUD layout", "Bars offset X", 0f, StackedOffset("Horizontal"));
+            BarsOffsetY = BindOffset("5 - HUD layout", "Bars offset Y", 0f, StackedOffset("Vertical"));
             BarsWidth = Config.Bind("5 - HUD layout", "Bars width", 420f,
                 new ConfigDescription("Width of the bars.", new AcceptableValueRange<float>(150f, 1000f)));
+            StackBars = Config.Bind("5 - HUD layout", "Stack bars", true,
+                "Stack the quick bar under the hotbar and the bars on top of it, so they never overlap. The hotbar's " +
+                "anchor and offsets then move all three, and the quick bar and bars offsets only nudge each one from " +
+                "its stacked spot. Needs Move hotbar.");
+            StackGap = Config.Bind("5 - HUD layout", "Stack gap", 6f,
+                new ConfigDescription("Space between stacked blocks.", new AcceptableValueRange<float>(0f, 50f)));
+            StackKeyHints = Config.Bind("5 - HUD layout", "Stack key hints", true,
+                "Show the key hints in the bottom right as a column instead of a long row.");
+            KeyHintsSpacing = Config.Bind("5 - HUD layout", "Key hints spacing", 4f,
+                new ConfigDescription("Space between stacked key hints.", new AcceptableValueRange<float>(0f, 40f)));
             MoveHotbar = Config.Bind("5 - HUD layout", "Move hotbar", true,
                 "Move the vanilla hotbar to the position below.");
             StyleHotbar = Config.Bind("5 - HUD layout", "Style hotbar", true,
                 "Draw hotbar and quick bar slots in the theme colours.");
             HotbarAnchor = Config.Bind("5 - HUD layout", "Hotbar anchor", HudAnchor.Bottom,
                 "Screen point the hotbar is placed relative to.");
-            HotbarOffsetX = Config.Bind("5 - HUD layout", "Hotbar offset X", 0f, "Horizontal offset from the anchor.");
-            HotbarOffsetY = Config.Bind("5 - HUD layout", "Hotbar offset Y", 92f, "Vertical offset from the anchor.");
-            FoodAnchor = Config.Bind("5 - HUD layout", "Food anchor", HudAnchor.Bottom,
-                "Screen point the food row is placed relative to.");
-            FoodOffsetX = Config.Bind("5 - HUD layout", "Food offset X", 380f, "Horizontal offset from the anchor.");
-            FoodOffsetY = Config.Bind("5 - HUD layout", "Food offset Y", 16f, "Vertical offset from the anchor.");
+            HotbarOffsetX = BindOffset("5 - HUD layout", "Hotbar offset X", 0f, "Horizontal offset from the anchor.");
+            HotbarOffsetY = BindOffset("5 - HUD layout", "Hotbar offset Y", 86f, "Vertical offset from the anchor.");
+            PowerSlot = Config.Bind("5 - HUD layout", "Forsaken power slot", true,
+                "Show your forsaken power as a slot right of the hotbar, with its key and cooldown, instead of the vanilla display.");
+            UnifyBuffs = Config.Bind("5 - HUD layout", "Unify buffs", true,
+                "Show eaten food and status effects together as hotbar sized icons, instead of the vanilla displays.");
+            BuffsAnchor = Config.Bind("5 - HUD layout", "Buffs anchor", HudAnchor.BottomLeft,
+                "Screen point the buffs are placed relative to. They fill rows away from it.");
+            BuffsOffsetX = BindOffset("5 - HUD layout", "Buffs offset X", 20f, "Horizontal offset from the anchor.");
+            BuffsOffsetY = BindOffset("5 - HUD layout", "Buffs offset Y", 20f, "Vertical offset from the anchor.");
+            BuffsPerRow = Config.Bind("5 - HUD layout", "Buffs per row", 6,
+                new ConfigDescription("Icons in a row before a new row starts.", new AcceptableValueRange<int>(1, 20)));
 
             QuickBarEnabled = Config.Bind("6 - Quick bar 2", "Enabled", true,
                 "Show the second inventory row as a quick bar and use its items with the modifier key plus 1 to 8.");
@@ -133,8 +197,8 @@ namespace RuneUI
                 "While it is held, 1 to 8 do not use the normal hotbar.");
             QuickBarAnchor = Config.Bind("6 - Quick bar 2", "Anchor", HudAnchor.Bottom,
                 "Screen point the quick bar is placed relative to.");
-            QuickBarOffsetX = Config.Bind("6 - Quick bar 2", "Offset X", 0f, "Horizontal offset from the anchor.");
-            QuickBarOffsetY = Config.Bind("6 - Quick bar 2", "Offset Y", 16f, "Vertical offset from the anchor.");
+            QuickBarOffsetX = BindOffset("6 - Quick bar 2", "Offset X", 0f, StackedOffset("Horizontal"));
+            QuickBarOffsetY = BindOffset("6 - Quick bar 2", "Offset Y", 0f, StackedOffset("Vertical"));
 
             PartyEnabled = Config.Bind("7 - Party list", "Enabled", true,
                 "List nearby players with their health.");
@@ -148,10 +212,32 @@ namespace RuneUI
                 "Hide the health bar floating over other players. Their names stay.");
             PartyAnchor = Config.Bind("7 - Party list", "Anchor", HudAnchor.TopLeft,
                 "Screen point the party list is placed relative to.");
-            PartyOffsetX = Config.Bind("7 - Party list", "Offset X", 20f, "Horizontal offset from the anchor.");
-            PartyOffsetY = Config.Bind("7 - Party list", "Offset Y", -20f, "Vertical offset from the anchor.");
+            PartyOffsetX = BindOffset("7 - Party list", "Offset X", 20f, "Horizontal offset from the anchor.");
+            PartyOffsetY = BindOffset("7 - Party list", "Offset Y", -20f, "Vertical offset from the anchor.");
             PartyWidth = Config.Bind("7 - Party list", "Width", 220f,
                 new ConfigDescription("Width of each row.", new AcceptableValueRange<float>(120f, 500f)));
+
+            FoodSlotsEnabled = Config.Bind("8 - Food slots", "Enabled", true,
+                "Three extra slots for food, shown right of the quick bar and below your inventory. Food in them " +
+                "counts toward your weight and goes into your tombstone when you die. Turning this off only hides " +
+                "the slots; food already in them is kept.");
+            FoodFirstKey = Config.Bind("8 - Food slots", "First key", FirstFoodKey.Z,
+                "Key for the first food slot, next to U and B for the other two. Pick Y if your keyboard has Y and Z swapped.");
+            FoodInventoryOffsetX = BindOffset("8 - Food slots", "Inventory offset X", 0f, "Horizontal position of the food slots under the inventory. With a chest open they sit right of the inventory instead.");
+            FoodInventoryOffsetY = BindOffset("8 - Food slots", "Inventory offset Y", -12f, "Vertical position of the food slots under the inventory. With a chest open they sit right of the inventory instead.");
+
+            SkillToastsEnabled = Config.Bind("9 - Skill toasts", "Enabled", true,
+                "Show a toast with the skill's level and progress to the next level whenever a skill gains experience.");
+            SkillToastsDuration = Config.Bind("9 - Skill toasts", "Duration", 4f,
+                new ConfigDescription("Seconds a toast stays after the skill's last gain.",
+                    new AcceptableValueRange<float>(1f, 20f)));
+            SkillToastsMax = Config.Bind("9 - Skill toasts", "Max toasts", 4,
+                new ConfigDescription("Most toasts shown at once; the oldest goes first.",
+                    new AcceptableValueRange<int>(1, 10)));
+            SkillToastsAnchor = Config.Bind("9 - Skill toasts", "Anchor", HudAnchor.Right,
+                "Screen point the toasts are placed relative to. Older toasts move away from it.");
+            SkillToastsOffsetX = BindOffset("9 - Skill toasts", "Offset X", -20f, "Horizontal offset from the anchor.");
+            SkillToastsOffsetY = BindOffset("9 - Skill toasts", "Offset Y", -60f, "Vertical offset from the anchor.");
 
             // Every change rebuilds what this mod drew, so colours, font and shape apply live.
             Config.SettingChanged += (_, __) => Theme.Invalidate();
@@ -167,6 +253,17 @@ namespace RuneUI
             if (Hud.instance == null || !DumpHudKey.Value.IsDown()) return;
             Log.LogInfo(UiTools.DumpHierarchy(Hud.instance.transform));
         }
+
+        /// <summary>
+        /// Offsets get a range so config editors offer negative values too, not only the plain number
+        /// box some of them fall back to for an unbounded float.
+        /// </summary>
+        private static string StackedOffset(string direction) =>
+            direction + " offset from the anchor. With Stack bars on, a nudge from the stacked position instead.";
+
+        private ConfigEntry<float> BindOffset(string section, string key, float value, string description) =>
+            Config.Bind(section, key, value,
+                new ConfigDescription(description, new AcceptableValueRange<float>(-2000f, 2000f)));
 
         private void OnDestroy()
         {

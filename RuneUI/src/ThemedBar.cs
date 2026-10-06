@@ -16,7 +16,8 @@ namespace RuneUI
 
         public ThemedBar(string name, Transform parent, Color color, float textSize)
         {
-            Root = Theme.NewPanel(name, parent).rectTransform;
+            var background = Theme.NewPanel(name, parent);
+            Root = background.rectTransform;
             Root.anchorMin = Root.anchorMax = new Vector2(0f, 1f);
             Root.pivot = new Vector2(0f, 1f);
 
@@ -28,6 +29,14 @@ namespace RuneUI
             _fill.anchorMin = Vector2.zero;
             _fill.anchorMax = Vector2.one;
             _fill.offsetMin = _fill.offsetMax = Vector2.zero;
+
+            // Raised fill in a sunken track: the fill is lit from above, the track is shadowed at the top.
+            float shading = Plugin.BarShading.Value;
+            if (shading > 0f)
+            {
+                ShadeEffect.Apply(_fill.GetComponent<Image>(), 0.45f * shading, -0.55f * shading);
+                ShadeEffect.Apply(background, -0.45f * shading, 0.1f * shading);
+            }
 
             if (textSize > 0f)
             {

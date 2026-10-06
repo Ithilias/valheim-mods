@@ -12,7 +12,7 @@ namespace RuneUI
     {
         private const float RefreshInterval = 0.25f;
         private const float NameHeight = 18f;
-        private const float BarHeight = 10f;
+        private const float BarHeight = 18f;
         private const float RowGap = 6f;
 
         private sealed class Row
@@ -81,7 +81,9 @@ namespace RuneUI
                 string name = other.GetPlayerName();
                 if (row.Name.text != name) row.Name.text = name;
                 row.Health.Layout(0f, NameHeight, width, BarHeight);
-                row.Health.SetValue(other.IsDead() ? 0f : other.GetHealthPercentage(), null);
+                float health = other.IsDead() ? 0f : other.GetHealth();
+                float maxHealth = Mathf.Max(1f, other.GetMaxHealth());
+                row.Health.SetValue(health / maxHealth, Mathf.CeilToInt(health) + " / " + Mathf.CeilToInt(maxHealth));
             }
             for (int i = shown; i < Rows.Count; i++)
                 if (Rows[i].Root.gameObject.activeSelf) Rows[i].Root.gameObject.SetActive(false);
@@ -106,7 +108,7 @@ namespace RuneUI
             {
                 Root = root,
                 Name = name,
-                Health = new ThemedBar("Health", root, Plugin.HealthColor.Value, 0f),
+                Health = new ThemedBar("Health", root, Plugin.HealthColor.Value, 12f),
             };
             Rows.Add(row);
             return row;

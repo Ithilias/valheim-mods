@@ -32,10 +32,37 @@ namespace RuneUI
         /// <summary>Size and pivot of one slot, from the prefab every slot is cloned from.</summary>
         public static void SlotGeometry(HotkeyBar bar, out Vector2 size, out Vector2 pivot, out float span)
         {
-            var rt = bar.m_elementPrefab.transform as RectTransform;
-            size = rt != null ? rt.rect.size : new Vector2(64f, 64f);
-            pivot = rt != null ? rt.pivot : new Vector2(0.5f, 0.5f);
+            if (!ReferenceEquals(bar, _measuredBar)) Measure(bar);
+            size = _slotSize;
+            pivot = _slotPivot;
             span = (SlotCount - 1) * bar.m_elementSpace + size.x;
+        }
+
+        private static HotkeyBar _measuredBar;
+        private static Vector2 _slotSize = new Vector2(64f, 64f);
+        private static Vector2 _slotPivot = new Vector2(0.5f, 0.5f);
+
+        /// <summary>
+        /// The prefab's own rect is not what a slot gets once it sits in the hotbar (its size depends
+        /// on the parent), so measure a real one: a throwaway clone under the hotbar.
+        /// </summary>
+        private static void Measure(HotkeyBar bar)
+        {
+            _measuredBar = bar;
+            var go = Object.Instantiate(bar.m_elementPrefab, bar.transform);
+            try
+            {
+                var rt = (RectTransform)go.transform;
+                Vector3 scale = rt.localScale;
+                _slotSize = new Vector2(rt.rect.width * scale.x, rt.rect.height * scale.y);
+                _slotPivot = rt.pivot;
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+            }
+            if (_slotSize.x < 1f || _slotSize.y < 1f) _slotSize = new Vector2(bar.m_elementSpace, bar.m_elementSpace);
+            Plugin.Log.LogInfo($"Hotbar slot size {_slotSize}, pivot {_slotPivot}, spacing {bar.m_elementSpace}.");
         }
 
         public static void Update(Hud hud, Player player)
@@ -57,6 +84,51 @@ namespace RuneUI
             {
                 Unstyle();
             }
+
+            if (player != null) UpdateRings(bar, player);
+            PowerSlot.Update(hud, bar, player);
+        }
+
+        /// <summary>Vanilla places hotbar slot x at x times m_elementSpace, which tells each slot's item.</summary>
+        private static void UpdateRings(HotkeyBar bar, Player player)
+        {
+            Inventory inventory = player.GetInventory();
+            foreach (Transform slot in bar.transform)
+            {
+                if (slot.name.StartsWith("RuneUI_")) continue;
+                int x = Mathf.RoundToInt(slot.localPosition.x / bar.m_elementSpace);
+                QualityRing.Update(slot, inventory.GetItemAt(x, 0), true);
+            }
+        }
+
+        /// <summary>The hotbar is the base of the stack and always uses its own settings.</summary>
+        public static void HotbarPlacement(out HudAnchor anchor, out float x, out float y)
+        {
+            anchor = Plugin.HotbarAnchor.Value;
+            x = Plugin.HotbarOffsetX.Value;
+            y = Plugin.HotbarOffsetY.Value;
+        }
+
+        /// <summary>Whether the quick bar and bars should be stacked on the hotbar this frame.</summary>
+        public static bool Stacking => Plugin.StackBars.Value && Plugin.MoveHotbar.Value && _bar != null;
+
+        /// <summary>
+        /// Bottom and top of the hotbar's slots as drawn, in <paramref name="space"/>. Measured from the
+        /// slots themselves (and the forsaken power slot) so stacking never depends on pivot maths.
+        /// </summary>
+        public static bool TryEdges(Transform space, out float bottom, out float top)
+        {
+            bottom = float.MaxValue;
+            top = float.MinValue;
+            if (_bar == null) return false;
+            foreach (Transform child in _bar.transform)
+            {
+                if (!child.gameObject.activeInHierarchy || !(child is RectTransform rt)) continue;
+                Rect r = Theme.Bounds(rt, space);
+                bottom = Mathf.Min(bottom, r.yMin);
+                top = Mathf.Max(top, r.yMax);
+            }
+            return top > bottom;
         }
 
         private static void Move(HotkeyBar bar)
@@ -74,10 +146,11 @@ namespace RuneUI
             // Vanilla lays slots out from the bar's pivot at multiples of m_elementSpace. Place the
             // bar so the box around all eight slots sits at the configured anchor point.
             SlotGeometry(bar, out Vector2 size, out Vector2 pivot, out float span);
-            Vector2 anchor = Theme.AnchorPoint(Plugin.HotbarAnchor.Value);
+            HotbarPlacement(out HudAnchor hudAnchor, out float x, out float y);
+            Vector2 anchor = Theme.AnchorPoint(hudAnchor);
             float scale = Plugin.HudScale.Value * _origScale.x;
             var boxPivot = new Vector2(anchor.x * span - pivot.x * size.x, anchor.y * size.y - pivot.y * size.y);
-            var pos = new Vector2(Plugin.HotbarOffsetX.Value, Plugin.HotbarOffsetY.Value) - boxPivot * scale;
+            var pos = new Vector2(x, y) - boxPivot * scale;
 
             rt.anchorMin = anchor;
             rt.anchorMax = anchor;
@@ -135,12 +208,17 @@ namespace RuneUI
         {
             Restore();
             Unstyle();
+            PowerSlot.Remove();
+            if (_bar != null)
+                foreach (Transform slot in _bar.transform) QualityRing.Remove(slot);
             _styleVersion = -1;
         }
 
         public static void ResetState()
         {
+            PowerSlot.ResetState();
             _bar = null;
+            _measuredBar = null;
             _moved = false;
             _styleVersion = -1;
             StyledImages.Clear();

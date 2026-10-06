@@ -2,41 +2,35 @@ using System;
 using HarmonyLib;
 using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
 using Object = UnityEngine.Object;
 
 namespace RuneUI
 {
     /// <summary>
-    /// A second hotbar showing inventory row 2, used with the modifier key plus 1 to 8. Its slots are
-    /// clones of the vanilla hotbar slot, so it looks like the hotbar and needs no item state of its own.
+    /// A second hotbar showing inventory row 2, used with the modifier key plus 1 to 8, with the
+    /// modifier shown once on its left. The food slots extend it on the right.
     /// </summary>
     internal static class QuickBar2
     {
         private const int Row = 1;
+        private const float ExtensionGap = 14f;
 
-        private sealed class Slot
-        {
-            public GameObject Go;
-            public Image Icon;
-            public GuiBar Durability;
-            public TMP_Text Amount;
-            public TMP_Text Binding;
-            public GameObject Equipped;
-            public GameObject Queued;
-            public int StackShown = -1;
-        }
-
-        private static readonly Func<Player, bool> TakeInput =
+        private static readonly Func<Player, bool> TakeInputMethod =
             AccessTools.MethodDelegate<Func<Player, bool>>(AccessTools.Method(typeof(Player), "TakeInput"));
 
         private static RectTransform _root;
-        private static readonly Slot[] Slots = new Slot[Hotbar.SlotCount];
+        private static readonly HotbarSlot[] Slots = new HotbarSlot[Hotbar.SlotCount];
+        private static readonly HotbarSlot[] FoodSlots = new HotbarSlot[FoodPouch.Size];
+        private static TMP_Text _modifierLabel;
         private static int _version = -1;
-        private static KeyCode _labelKey;
+        private static bool _builtWithFood;
 
         public static bool ModifierHeld =>
             Plugin.ModEnabled.Value && Plugin.QuickBarEnabled.Value && ZInput.GetKey(Plugin.QuickBarModifier.Value, false);
+
+        /// <summary>The game's own check for whether the player may act on key presses right now.</summary>
+        public static bool CanTakeInput(Player player) =>
+            TakeInputMethod(player) && !Hud.IsPieceSelectionVisible() && !Hud.InRadial();
 
         public static void Update(Hud hud, Player player)
         {
@@ -47,64 +41,46 @@ namespace RuneUI
             }
             var bar = Hotbar.Find(hud);
             if (bar == null) return;
-            if (_root == null || _version != Theme.Version) Build(bar);
+            if (_root == null || _version != Theme.Version || _builtWithFood != Plugin.FoodSlotsEnabled.Value)
+                Build(bar);
 
-            Theme.Place(_root, Plugin.QuickBarAnchor.Value, Plugin.QuickBarOffsetX.Value,
-                Plugin.QuickBarOffsetY.Value, Hotbar.BaseScale);
+            if (Hotbar.Stacking && Hotbar.TryEdges(_root.parent, out float hotbarBottom, out _))
+            {
+                // Under the hotbar; this bar's own offsets only nudge it from there.
+                float top = Theme.Bounds((RectTransform)Slots[0].Go.transform, _root.parent).yMax;
+                Theme.PlaceStacked(_root, Plugin.HotbarOffsetX.Value + Plugin.QuickBarOffsetX.Value, top,
+                    hotbarBottom - Plugin.StackGap.Value + Plugin.QuickBarOffsetY.Value, Hotbar.BaseScale);
+            }
+            else
+            {
+                Theme.Place(_root, Plugin.QuickBarAnchor.Value, Plugin.QuickBarOffsetX.Value,
+                    Plugin.QuickBarOffsetY.Value, Hotbar.BaseScale);
+            }
             bool show = !player.IsDead();
             if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);
             if (!show) return;
 
-            if (_labelKey != Plugin.QuickBarModifier.Value) SetLabels();
+            string modifier = KeyLabel(Plugin.QuickBarModifier.Value);
+            if (_modifierLabel.text != modifier) _modifierLabel.text = modifier;
+
             Inventory inventory = player.GetInventory();
-            for (int x = 0; x < Hotbar.SlotCount; x++) Fill(Slots[x], inventory.GetItemAt(x, Row), player);
-        }
+            for (int x = 0; x < Hotbar.SlotCount; x++) Slots[x].Fill(inventory.GetItemAt(x, Row), player);
 
-        /// <summary>Same per-slot display as vanilla HotkeyBar.UpdateIcons.</summary>
-        private static void Fill(Slot slot, ItemDrop.ItemData item, Player player)
-        {
-            if (item == null)
+            if (_builtWithFood)
             {
-                slot.Icon.gameObject.SetActive(false);
-                slot.Durability.gameObject.SetActive(false);
-                slot.Equipped.SetActive(false);
-                slot.Queued.SetActive(false);
-                slot.Amount.gameObject.SetActive(false);
-                return;
-            }
-
-            slot.Icon.gameObject.SetActive(true);
-            slot.Icon.sprite = item.GetIcon();
-            bool worn = item.m_shared.m_useDurability && item.m_durability < item.GetMaxDurability();
-            slot.Durability.gameObject.SetActive(worn);
-            if (worn)
-            {
-                if (item.m_durability <= 0f)
+                Inventory pouch = FoodPouch.Get();
+                for (int i = 0; i < FoodPouch.Size; i++)
                 {
-                    slot.Durability.SetValue(1f);
-                    slot.Durability.SetColor(Mathf.Sin(Time.time * 10f) > 0f ? Color.red : new Color(0f, 0f, 0f, 0f));
+                    FoodSlots[i].SetBinding(FoodPouch.KeyLabel(i));
+                    FoodSlots[i].Fill(pouch?.GetItemAt(i, 0), player);
                 }
-                else
-                {
-                    slot.Durability.SetValue(item.GetDurabilityPercentage());
-                    slot.Durability.ResetColor();
-                }
-            }
-            slot.Equipped.SetActive(item.m_equipped);
-            slot.Queued.SetActive(player.IsEquipActionQueued(item));
-            bool stacks = item.m_shared.m_maxStackSize > 1;
-            slot.Amount.gameObject.SetActive(stacks);
-            if (stacks && slot.StackShown != item.m_stack)
-            {
-                slot.Amount.text = item.m_stack + " / " + item.m_shared.m_maxStackSize;
-                slot.StackShown = item.m_stack;
             }
         }
 
         /// <summary>Called after Player.Update for the local player.</summary>
         public static void HandleInput(Player player)
         {
-            if (!ModifierHeld || !TakeInput(player) || Hud.IsPieceSelectionVisible() || Hud.InRadial()) return;
+            if (!ModifierHeld || !CanTakeInput(player)) return;
             for (int i = 0; i < Hotbar.SlotCount; i++)
             {
                 if (!ZInput.GetKeyDown(KeyCode.Alpha1 + i, false) && !ZInput.GetKeyDown(KeyCode.Keypad1 + i, false)) continue;
@@ -117,39 +93,42 @@ namespace RuneUI
         {
             Remove();
             _version = Theme.Version;
+            _builtWithFood = Plugin.FoodSlotsEnabled.Value;
             Hotbar.SlotGeometry(bar, out Vector2 size, out Vector2 pivot, out float span);
             _root = Theme.NewRect("RuneUI_QuickBar", bar.transform.parent);
             _root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, span);
             _root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, size.y);
+            // The root's pivot follows its anchor; this is where slot 0 sits so all eight fill the root.
+            Vector2 anchor = Theme.AnchorPoint(Hotbar.Stacking ? Plugin.HotbarAnchor.Value : Plugin.QuickBarAnchor.Value);
+            var origin = new Vector2(pivot.x * size.x - anchor.x * span, pivot.y * size.y - anchor.y * size.y);
 
             for (int x = 0; x < Hotbar.SlotCount; x++)
             {
-                var go = Object.Instantiate(bar.m_elementPrefab, _root);
-                go.name = "QuickSlot" + x;
-                var rt = (RectTransform)go.transform;
-                rt.anchorMin = rt.anchorMax = Vector2.zero;
-                rt.anchoredPosition = new Vector2(x * bar.m_elementSpace + pivot.x * size.x, pivot.y * size.y);
-                go.transform.Find("selected").gameObject.SetActive(false);
-                if (Plugin.StyleHotbar.Value) Hotbar.StyleSlot(go.transform, null);
-                Slots[x] = new Slot
-                {
-                    Go = go,
-                    Icon = go.transform.Find("icon").GetComponent<Image>(),
-                    Durability = go.transform.Find("durability").GetComponent<GuiBar>(),
-                    Amount = go.transform.Find("amount").GetComponent<TMP_Text>(),
-                    Binding = go.transform.Find("binding").GetComponent<TMP_Text>(),
-                    Equipped = go.transform.Find("equiped").gameObject,
-                    Queued = go.transform.Find("queued").gameObject,
-                };
+                Slots[x] = new HotbarSlot(bar, _root, "QuickSlot" + x);
+                Slots[x].PlaceAt(bar, x, origin);
+                Slots[x].SetBinding((x + 1).ToString());
             }
-            SetLabels();
-        }
 
-        private static void SetLabels()
-        {
-            _labelKey = Plugin.QuickBarModifier.Value;
-            string prefix = KeyLabel(_labelKey);
-            for (int x = 0; x < Hotbar.SlotCount; x++) Slots[x].Binding.text = prefix + (x + 1);
+            if (_builtWithFood)
+            {
+                var foodOrigin = origin + new Vector2(ExtensionGap, 0f);
+                for (int i = 0; i < FoodPouch.Size; i++)
+                {
+                    FoodSlots[i] = new HotbarSlot(bar, _root, "FoodSlot" + i);
+                    FoodSlots[i].PlaceAt(bar, Hotbar.SlotCount + i, foodOrigin);
+                }
+            }
+
+            _modifierLabel = Theme.NewText("Modifier", _root, 18f, TextAlignmentOptions.Right);
+            _modifierLabel.color = Plugin.AccentColor.Value;
+            _modifierLabel.fontStyle = FontStyles.Bold;
+            var labelRt = (RectTransform)_modifierLabel.transform;
+            // Centre it on the first slot as drawn, left of it.
+            Rect first = Theme.Bounds((RectTransform)Slots[0].Go.transform, _root);
+            labelRt.anchorMin = labelRt.anchorMax = Vector2.zero;
+            labelRt.pivot = new Vector2(1f, 0.5f);
+            labelRt.anchoredPosition = new Vector2(first.xMin - _root.rect.xMin - 8f, first.center.y - _root.rect.yMin);
+            labelRt.sizeDelta = new Vector2(70f, first.height);
         }
 
         private static string KeyLabel(KeyCode key)
@@ -158,16 +137,15 @@ namespace RuneUI
             {
                 case KeyCode.LeftAlt:
                 case KeyCode.RightAlt:
-                    return "A";
+                    return "Alt";
                 case KeyCode.LeftControl:
                 case KeyCode.RightControl:
-                    return "C";
+                    return "Ctrl";
                 case KeyCode.LeftShift:
                 case KeyCode.RightShift:
-                    return "S";
+                    return "Shift";
                 default:
-                    string name = key.ToString();
-                    return name.Length > 0 ? name.Substring(0, 1) : "";
+                    return key.ToString();
             }
         }
 
@@ -180,7 +158,9 @@ namespace RuneUI
         public static void ResetState()
         {
             _root = null;
-            for (int i = 0; i < Slots.Length; i++) Slots[i] = null;
+            _modifierLabel = null;
+            Array.Clear(Slots, 0, Slots.Length);
+            Array.Clear(FoodSlots, 0, FoodSlots.Length);
         }
     }
 }

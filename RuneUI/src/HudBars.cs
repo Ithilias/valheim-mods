@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace RuneUI
@@ -11,7 +10,7 @@ namespace RuneUI
     {
         private const float HealthHeight = 22f;
         private const float StaminaHeight = 14f;
-        private const float AdrenalineHeight = 8f;
+        private const float ThinHeight = 8f;
         private const float Gap = 4f;
 
         private static RectTransform _root;
@@ -19,9 +18,11 @@ namespace RuneUI
         private static ThemedBar _stamina;
         private static ThemedBar _eitr;
         private static ThemedBar _adrenaline;
+        private static ThemedBar _stagger;
+        private static float _staggerHideTimer = 99f;
         private static int _version = -1;
 
-        private static readonly Dictionary<RectTransform, Vector3> HiddenScales = new Dictionary<RectTransform, Vector3>();
+        private static readonly ScaleHider Hider = new ScaleHider();
 
         public static void Update(Hud hud, Player player)
         {
@@ -33,15 +34,40 @@ namespace RuneUI
             if (_root == null || _version != Theme.Version) Build(hud);
 
             float width = Plugin.BarsWidth.Value;
-            Theme.Place(_root, Plugin.BarsAnchor.Value, Plugin.BarsOffsetX.Value, Plugin.BarsOffsetY.Value);
+            Hotbar.Find(hud);
+
+            // Thin optional bars go above health, so health and stamina never move when they appear.
+            float adrenaline = player.GetAdrenaline();
+            float maxAdrenaline = player.GetMaxAdrenaline();
+            bool hasAdrenaline = adrenaline > 0f && maxAdrenaline > 0f;
+            float stagger = player.GetStaggerPercentage();
+            // Like vanilla, the stagger bar stays a second after it empties.
+            _staggerHideTimer = stagger > 0f ? 0f : _staggerHideTimer + Time.deltaTime;
+            bool hasStagger = _staggerHideTimer < 1f;
+
+            float y = 0f;
+            _stagger.SetActive(hasStagger);
+            if (hasStagger)
+            {
+                _stagger.Layout(0f, y, width, ThinHeight);
+                _stagger.SetValue(stagger, null);
+                y += ThinHeight + Gap;
+            }
+            _adrenaline.SetActive(hasAdrenaline);
+            if (hasAdrenaline)
+            {
+                _adrenaline.Layout(0f, y, width, ThinHeight);
+                _adrenaline.SetValue(adrenaline / maxAdrenaline, null);
+                y += ThinHeight + Gap;
+            }
 
             float health = player.GetHealth();
             float maxHealth = player.GetMaxHealth();
-            _health.Layout(0f, 0f, width, HealthHeight);
+            _health.Layout(0f, y, width, HealthHeight);
             _health.SetValue(health / Mathf.Max(1f, maxHealth),
                 Mathf.CeilToInt(health) + " / " + Mathf.CeilToInt(maxHealth));
+            y += HealthHeight + Gap;
 
-            float y = HealthHeight + Gap;
             float stamina = player.GetStamina();
             float maxStamina = player.GetMaxStamina();
             float maxEitr = player.GetMaxEitr();
@@ -56,42 +82,36 @@ namespace RuneUI
             {
                 float eitr = player.GetEitr();
                 _eitr.Layout(staminaWidth + Gap, y, width - staminaWidth - Gap, StaminaHeight);
-                _eitr.SetValue(eitr / maxEitr, Mathf.CeilToInt(eitr).ToString());
+                _eitr.SetValue(eitr / maxEitr, Mathf.CeilToInt(eitr) + " / " + Mathf.CeilToInt(maxEitr));
             }
             y += StaminaHeight;
 
-            float adrenaline = player.GetAdrenaline();
-            float maxAdrenaline = player.GetMaxAdrenaline();
-            bool hasAdrenaline = adrenaline > 0f && maxAdrenaline > 0f;
-            _adrenaline.SetActive(hasAdrenaline);
-            if (hasAdrenaline)
-            {
-                y += Gap;
-                _adrenaline.Layout(0f, y, width, AdrenalineHeight);
-                _adrenaline.SetValue(adrenaline / maxAdrenaline, null);
-                y += AdrenalineHeight;
-            }
-
             _root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, width);
             _root.SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, y);
+
+            if (Hotbar.Stacking && Hotbar.TryEdges(_root.parent, out _, out float hotbarTop))
+            {
+                // On top of the hotbar; the bars' own offsets only nudge them from there.
+                float bottom = Theme.Bounds(_root, _root.parent).yMin;
+                Theme.PlaceStacked(_root, Plugin.HotbarOffsetX.Value + Plugin.BarsOffsetX.Value, bottom,
+                    hotbarTop + Plugin.StackGap.Value + Plugin.BarsOffsetY.Value);
+            }
+            else
+            {
+                Theme.Place(_root, Plugin.BarsAnchor.Value, Plugin.BarsOffsetX.Value, Plugin.BarsOffsetY.Value);
+            }
         }
 
         /// <summary>Runs after the vanilla animators, which may drive the bars' transforms.</summary>
         public static void HideVanilla(Hud hud)
         {
             if (_root == null) return;
-            Hide(hud.m_healthPanel);
-            Hide(hud.m_foodBarRoot);
-            Hide(hud.m_staminaBar2Root);
-            Hide(hud.m_eitrBarRoot);
-            Hide(hud.m_adrenalineBarRoot);
-        }
-
-        private static void Hide(RectTransform rt)
-        {
-            if (rt == null) return;
-            if (!HiddenScales.ContainsKey(rt)) HiddenScales[rt] = rt.localScale;
-            if (rt.localScale != Vector3.zero) rt.localScale = Vector3.zero;
+            Hider.Hide(hud.m_healthPanel);
+            Hider.Hide(hud.m_foodBarRoot);
+            Hider.Hide(hud.m_staminaBar2Root);
+            Hider.Hide(hud.m_eitrBarRoot);
+            Hider.Hide(hud.m_adrenalineBarRoot);
+            if (hud.m_staggerAnimator != null) Hider.Hide(hud.m_staggerAnimator.transform);
         }
 
         private static void Build(Hud hud)
@@ -103,13 +123,12 @@ namespace RuneUI
             _stamina = new ThemedBar("Stamina", _root, Plugin.StaminaColor.Value, 11f);
             _eitr = new ThemedBar("Eitr", _root, Plugin.EitrColor.Value, 11f);
             _adrenaline = new ThemedBar("Adrenaline", _root, Plugin.AccentColor.Value, 0f);
+            _stagger = new ThemedBar("Stagger", _root, Plugin.StaggerColor.Value, 0f);
         }
 
         public static void Remove()
         {
-            foreach (var pair in HiddenScales)
-                if (pair.Key != null) pair.Key.localScale = pair.Value;
-            HiddenScales.Clear();
+            Hider.Restore();
             if (_root != null) Object.Destroy(_root.gameObject);
             ResetState();
         }
@@ -117,8 +136,8 @@ namespace RuneUI
         public static void ResetState()
         {
             _root = null;
-            _health = _stamina = _eitr = _adrenaline = null;
-            HiddenScales.Clear();
+            _health = _stamina = _eitr = _adrenaline = _stagger = null;
+            Hider.Forget();
         }
     }
 }
