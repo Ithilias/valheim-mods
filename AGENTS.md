@@ -18,8 +18,8 @@ Client-side BepInEx mods for Valheim, one folder per mod. Read the root README f
 - The version lives only in `manifest.json`. A published version can never be uploaded again, so
   every released change, even an icon, needs a version bump and a CHANGELOG entry.
 - CHANGELOG entries are written for players: what changed for them, not how the code works.
-- BepInEx config sections and keys must not contain `= \n \t \ " ' [ ]`. One of these in a key
-  throws in `Awake` and the whole mod silently does nothing.
+- BepInEx config sections and keys must not contain `= \n \t \ " ' [ ]` or start or end with
+  whitespace. Either throws in `Awake` and the whole mod silently does nothing.
 - Renaming a config section or key resets that setting for every player; avoid it, or note it in
   the CHANGELOG.
 - Keep READMEs in sync with the `Config.Bind` calls: names, defaults, sections.
@@ -41,3 +41,4 @@ Client-side BepInEx mods for Valheim, one folder per mod. Read the root README f
 
 - Conventional Commits, scoped to the mod: `fix(roundminimap): ...`, `docs(statuskeeper): ...`.
 - One branch and pull request per topic, squash merged. Never commit to `main` directly.
+- Run `.github/scripts/checks.sh` before pushing; pull requests run it too.
