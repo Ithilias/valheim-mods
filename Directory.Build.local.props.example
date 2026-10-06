@@ -1,0 +1,13 @@
+<Project>
+  <!-- Copy to Directory.Build.local.props (ignored by git) and point these at your install.
+       Values here win over the VALHEIM_MANAGED and BEPINEX_CORE environment variables. -->
+  <PropertyGroup>
+    <!-- Windows -->
+    <GameManaged>C:\Program Files (x86)\Steam\steamapps\common\Valheim\valheim_Data\Managed</GameManaged>
+    <BepInExCore>C:\path\to\BepInEx\core</BepInExCore>
+    <!-- Linux:
+    <GameManaged>$(HOME)/.steam/steam/steamapps/common/Valheim/valheim_Data/Managed</GameManaged>
+    <BepInExCore>/path/to/BepInEx/core</BepInExCore>
+    -->
+  </PropertyGroup>
+</Project>
