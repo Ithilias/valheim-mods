@@ -254,9 +254,22 @@ namespace RoundMinimap
                 : (Vector3)rootShift);
 
             vanillaHalf = WorldSize(mapRect, _originalMapSize * 0.5f);
-            currentHalf = IsApplied && Radius > 0f
-                ? WorldSize(mapRect, new Vector2(Radius, Radius))
-                : WorldSize(mapRect, mapRect.rect.size * 0.5f);
+            if (IsApplied && Radius > 0f)
+            {
+                // Compass letters can sit outside the circle, and count as part of the map then.
+                float extent = Radius;
+                if (MinimapCompass.IsApplied)
+                {
+                    float letters = Radius * Mathf.Clamp(Plugin.CompassDistance.Value, 0.1f, 1.5f)
+                                    + Plugin.CompassFontSize.Value * 0.5f;
+                    extent = Mathf.Max(extent, letters);
+                }
+                currentHalf = WorldSize(mapRect, new Vector2(extent, extent));
+            }
+            else
+            {
+                currentHalf = WorldSize(mapRect, mapRect.rect.size * 0.5f);
+            }
             return true;
         }
 

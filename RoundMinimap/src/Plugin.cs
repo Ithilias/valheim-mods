@@ -34,6 +34,7 @@ namespace RoundMinimap
         internal static ConfigEntry<float> MapOffsetX;
         internal static ConfigEntry<float> MapOffsetY;
         internal static ConfigEntry<bool> MakeRoomForStatusEffects;
+        internal static ConfigEntry<bool> MoveShipDisplay;
         internal static ConfigEntry<bool> StatusWrapRows;
         internal static ConfigEntry<int> StatusMinPerRow;
         internal static ConfigEntry<int> StatusIconsPerRow;
@@ -169,6 +170,9 @@ namespace RoundMinimap
                 new ConfigDescription("Moves the whole small map up or down, in pixels. Negative moves it " +
                     "down, positive moves it up.",
                     new AcceptableValueRange<float>(-2000f, 2000f)));
+            MoveShipDisplay = Config.Bind("4 - Layout", "Move sailing display below map", true,
+                "While steering a ship, move the sail and wind display down when a bigger or moved map " +
+                "would cover it, keeping the gap vanilla leaves.");
             HiddenElements = Config.Bind("4 - Layout", "Hidden elements", "",
                 "Comma-separated GameObject names under the small map root to hide outright, for anything " +
                 "'Hide square background' misses. Use the hierarchy dump key to find names.");
@@ -250,7 +254,7 @@ namespace RoundMinimap
             BiomeBorderColor = Config.Bind("7 - Biome label", "Border color", new Color(0.96f, 0.93f, 0.85f, 0.8f),
                 "Colour of that border.");
 
-            DumpHierarchyKey = Config.Bind("4 - Debug", "Dump hierarchy key",
+            DumpHierarchyKey = Config.Bind("9 - Debug", "Dump hierarchy key",
                 new KeyboardShortcut(KeyCode.F9, KeyCode.LeftControl),
                 "Logs the small minimap's UI hierarchy to the BepInEx log, with rect and component details.");
 

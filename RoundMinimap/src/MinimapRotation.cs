@@ -148,7 +148,12 @@ namespace RoundMinimap
                     pin.m_uiElement.localRotation = Quaternion.identity;
 
                 // Nothing clips the pins, so drop the ones that would hang over the round edge.
-                float iconRadius = pin.m_uiElement.rect.width * 0.5f;
+                // Other mods scale pins for their marker sizes, so the radius uses the pin's own
+                // scale, or the one it had before it was hidden here.
+                float scale = _clippedPins.TryGetValue(pin.m_uiElement, out Vector3 kept)
+                    ? kept.x
+                    : pin.m_uiElement.localScale.x;
+                float iconRadius = pin.m_uiElement.rect.width * 0.5f * Mathf.Abs(scale);
                 bool outside = clipRadius > 0f && offset.magnitude > Mathf.Max(0f, clipRadius - iconRadius);
                 ClipPin(pin.m_uiElement, outside);
 
@@ -214,8 +219,8 @@ namespace RoundMinimap
                 icon.anchoredPosition = state.Written;
                 if (Plugin.KeepPinsUpright.Value) icon.localRotation = Quaternion.identity;
 
-                bool outside = clipRadius > 0f
-                               && offset.magnitude > Mathf.Max(0f, clipRadius - icon.rect.width * 0.5f);
+                float iconRadius = icon.rect.width * 0.5f * Mathf.Abs(state.Scale.x);
+                bool outside = clipRadius > 0f && offset.magnitude > Mathf.Max(0f, clipRadius - iconRadius);
                 SetHidden(icon, state, outside);
             }
 
@@ -280,7 +285,8 @@ namespace RoundMinimap
             }
             else if (_clippedPins.TryGetValue(pin, out Vector3 scale))
             {
-                pin.localScale = scale;
+                // Something else may have set a new scale in the meantime; that one wins.
+                if (pin.localScale == Vector3.zero) pin.localScale = scale;
                 _clippedPins.Remove(pin);
             }
         }

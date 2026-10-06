@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.3.2
+- The sail and wind display you see while steering a ship now moves down when a bigger or moved
+  map would cover it. New setting `Move sailing display below map` (section `4 - Layout`), on by
+  default.
+- Status effect icons no longer jump back and forth between row lengths when a long name such as
+  Boon of the Lox is showing.
+- `Offset X` for the status effect icons now always applies. Before, it was ignored while the icons
+  were next to the map and the offset moved them towards it.
+- Status effect icons stay in their normal place when no minimap is shown, for example in a world
+  without a map.
+- A new status effect no longer flickers in the wrong place for a moment when it appears.
+- Compass letters placed outside the circle are now kept clear of the status effect icons too.
+- Pins and other mods' icons drawn smaller than normal, such as with TheGreatestMap's marker sizes,
+  are no longer hidden too early at the round edge.
+- If the status effect or sailing display layout ever fails after a game update, only that part
+  switches off instead of the whole mod.
+- The debug section is now `9 - Debug`. If you changed the hierarchy dump key, set it again.
+
 ## 1.3.1
 - Fixed: pins you hid with a map filter mod such as TheGreatestMap showed up on the minimap anyway,
   and opening the large map brought them all back. Filters are now respected on both maps.
