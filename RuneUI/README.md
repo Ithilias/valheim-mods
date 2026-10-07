@@ -62,6 +62,25 @@ The quick and gear slots are saved inside your character file. If you remove the
 stay in the save and are back when you install it again, so empty the slots first if you want to keep
 those items without the mod.
 
+## Coming from Equipment and Quick Slots
+
+Rune UI's quick and gear slots replace Equipment and Quick Slots, so remove that mod. The first time
+you log in with Rune UI, the items in its quick and equipment slots move into Rune UI's slots, and
+anything else from its extra rows into free inventory cells. Anything that does not fit is dropped by
+the game where you spawn, so make some room in your inventory before switching.
+
+If you already played without either mod and the game dropped your slot items, the cheat command
+`runeui_eaqs_restore` brings back the items in Equipment and Quick Slots' last backup. Only use it if
+the items are really gone, since it creates them again.
+
+## Console commands
+
+| Command | What it does |
+| --- | --- |
+| `runeui_slots` | Lists what is in the quick and gear slots |
+| `runeui_emptyslots` | Takes off and moves everything in the quick and gear slots into the inventory, for example before removing the mod |
+| `runeui_eaqs_restore` | Cheat. Brings back the items in Equipment and Quick Slots' backup, see above |
+
 ## Settings
 
 Config file: `BepInEx/config/ithilias.runeui.cfg`, created the first time you run the game. Settings

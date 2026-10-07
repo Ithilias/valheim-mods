@@ -276,6 +276,29 @@ namespace RuneUI
             catch (Exception e) { Plugin.Log.LogError($"Loading the gear slots failed: {e}"); }
         }
 
+        /// <summary>Before vanilla sizes the inventory and drops what lies outside it.</summary>
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), nameof(Player.OnSpawned))]
+        private static void PlayerOnSpawnedPrefix(Player __instance)
+        {
+            try
+            {
+                int rows = __instance.TryGetUniqueKeyValue(Player.InventoryRowsKey, out string value) && int.TryParse(value, out int saved)
+                    ? Mathf.Clamp(saved, 0, 9)
+                    : 4;
+                EaqsImport.Run(__instance, rows);
+            }
+            catch (Exception e) { Plugin.Log.LogError($"Taking over Equipment and Quick Slots' items failed: {e}"); }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Terminal), "InitTerminal")]
+        private static void TerminalInitTerminalPostfix()
+        {
+            try { Commands.Register(); }
+            catch (Exception e) { Plugin.Log.LogError($"Adding the console commands failed: {e}"); }
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), nameof(Player.Save))]
         private static void PlayerSavePrefix(Player __instance)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.0
+- Switching from Equipment and Quick Slots: the items in its quick and equipment slots move into Rune
+  UI's slots the first time you log in, instead of being dropped where you spawn.
+- New console commands: `runeui_slots` lists the slots, `runeui_emptyslots` moves everything out of
+  them, and the cheat `runeui_eaqs_restore` brings back Equipment and Quick Slots' backup.
+
 ## 0.4.0
 - The food slots are now quick slots: they take any item but ammo, and their key uses it. Food is
   eaten, meads are drunk, and weapons and tools are equipped. Food already in them stays.
