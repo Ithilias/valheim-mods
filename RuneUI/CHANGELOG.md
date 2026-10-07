@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.0
+- Works with Better Archery's quiver: Rune UI no longer puts items into the two rows it keeps below
+  your inventory, and keeps them when it adds inventory rows or takes over from Equipment and Quick
+  Slots.
+
 ## 0.9.0
 - New Paperdoll setting: the gear slots sit on a body outline, head at the top and legs at the
   bottom, instead of in a row.

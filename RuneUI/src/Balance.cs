@@ -34,7 +34,9 @@ namespace RuneUI
             _baseRows = Mathf.Clamp(rows, 0, 9);
             rows = Rows(_baseRows);
             Inventory inventory = player.GetInventory();
-            if (rows < inventory.GetHeight()) DeathKeeper.ShrinkTo(inventory, rows);
+            // Better Archery keeps its quiver rows below whatever count it is given.
+            int height = rows + BetterArcheryCompat.ReservedRows;
+            if (height < inventory.GetHeight()) DeathKeeper.ShrinkTo(inventory, height);
             _appliedRows = rows;
         }
 

@@ -116,11 +116,13 @@ namespace RuneUI
         /// </summary>
         public static bool ShrinkTo(Inventory inventory, int height)
         {
+            // Never into rows another mod keeps below the inventory.
+            int usable = height - (inventory.GetHeight() - BetterArcheryCompat.UsableRows(inventory));
             foreach (var item in new List<ItemDrop.ItemData>(inventory.GetAllItems()))
             {
                 if (item.m_gridPos.y < height) continue;
                 Vector2i pos = new Vector2i(-1, -1);
-                for (int y = 0; y < height && pos.x < 0; y++)
+                for (int y = 0; y < usable && pos.x < 0; y++)
                 for (int x = 0; x < inventory.GetWidth() && pos.x < 0; x++)
                     if (inventory.GetItemAt(x, y) == null) pos = new Vector2i(x, y);
                 if (pos.x < 0) return false;

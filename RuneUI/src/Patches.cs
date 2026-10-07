@@ -419,7 +419,9 @@ namespace RuneUI
 
         // Extra inventory rows: added on top of vanilla's count, which is saved unchanged.
 
+        // First, so Better Archery's replacement of this method sizes for the extra rows too.
         [HarmonyPrefix]
+        [HarmonyPriority(Priority.First)]
         [HarmonyPatch(typeof(Player), nameof(Player.SetInventorySize))]
         private static void SetInventorySizePrefix(Player __instance, ref int rows)
         {

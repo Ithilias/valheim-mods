@@ -126,10 +126,14 @@ namespace RuneUI
             return false;
         }
 
-        /// <summary>The first empty cell of <paramref name="inventory"/>, top row first.</summary>
+        /// <summary>
+        /// The first empty cell of <paramref name="inventory"/>, top row first, outside rows another
+        /// mod keeps for itself.
+        /// </summary>
         public static bool FindEmpty(Inventory inventory, out Vector2i pos)
         {
-            for (int y = 0; y < inventory.GetHeight(); y++)
+            int rows = BetterArcheryCompat.UsableRows(inventory);
+            for (int y = 0; y < rows; y++)
             for (int x = 0; x < inventory.GetWidth(); x++)
             {
                 if (inventory.GetItemAt(x, y) != null) continue;

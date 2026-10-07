@@ -25,10 +25,17 @@ namespace RuneUI
         public static void Run(Player player, int rows)
         {
             Inventory main = player.GetInventory();
+            // Below the grid, but not in Better Archery's quiver rows, unless Equipment and Quick Slots
+            // marked the item: Better Archery's quiver was off while that mod ran, and its rows were
+            // Equipment and Quick Slots' rows then.
+            int ownRows = rows + BetterArcheryCompat.ReservedRows;
             var stray = new List<ItemDrop.ItemData>();
             foreach (var item in main.GetAllItems())
-                if (item.m_gridPos.x < 0 || item.m_gridPos.y < 0 || item.m_gridPos.x >= main.GetWidth() || item.m_gridPos.y >= rows)
-                    stray.Add(item);
+            {
+                Vector2i at = item.m_gridPos;
+                bool outside = at.x < 0 || at.y < 0 || at.x >= main.GetWidth() || at.y >= ownRows;
+                if (outside || (at.y >= rows && item.m_customData.ContainsKey(SlotKey))) stray.Add(item);
+            }
             if (stray.Count == 0) return;
 
             int slotRow = BackupRows(player) ?? rows;

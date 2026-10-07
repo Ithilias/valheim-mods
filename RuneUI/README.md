@@ -77,6 +77,15 @@ If you already played without either mod and the game dropped your slot items, t
 `runeui_eaqs_restore` brings back the items in Equipment and Quick Slots' last backup. Only use it if
 the items are really gone, since it creates them again.
 
+## Other mods
+
+- **Better Archery** (2.x) works alongside. It keeps its quiver in two rows below your inventory and
+  shows the quiver itself; Rune UI never puts items into those rows and keeps them when it adds
+  inventory rows.
+- **Equipment and Quick Slots** is replaced by Rune UI; see above.
+- **Epic Loot** sees gear and items worn from the quick and gear slots, so their magic effects and
+  set bonuses count.
+
 ## Console commands
 
 | Command | What it does |
