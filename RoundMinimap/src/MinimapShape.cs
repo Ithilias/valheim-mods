@@ -17,6 +17,7 @@ namespace RoundMinimap
     {
         private const string BorderName = "RoundMinimapBorder";
         private const int TextureSize = 512;
+        private const string VanillaFrameSprite = "InputFieldBackground";
 
         private static CircleMeshEffect _effect;
         private static GameObject _border;
@@ -403,7 +404,7 @@ namespace RoundMinimap
 
         /// <summary>
         /// The configured border colour, or, while its colour is left at the default, the colour of
-        /// the vanilla frame the round map replaces. Mods that tint that frame, such as Seasons,
+        /// the vanilla frame the round map replaces, as long as that frame still has its vanilla sprite. Mods that tint that frame, such as Seasons,
         /// then carry over. The alpha always comes from the setting: the frame is a faint backing
         /// panel, and its alpha would make a thin rim almost invisible.
         /// </summary>
@@ -412,6 +413,9 @@ namespace RoundMinimap
             Color configured = Plugin.BorderColor.Value;
             if (!SameRgb(configured, (Color)Plugin.BorderColor.DefaultValue)) return configured;
             if (map.m_smallRoot == null || !map.m_smallRoot.TryGetComponent(out Image frame)) return configured;
+            // Only the plain vanilla panel: a UI mod's textured frame is usually left white and
+            // would turn the rim white too.
+            if (frame.sprite == null || frame.sprite.name != VanillaFrameSprite) return configured;
 
             Color tint = frame.color;
             return new Color(tint.r, tint.g, tint.b, configured.a);
