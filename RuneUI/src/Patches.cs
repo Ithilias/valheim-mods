@@ -161,6 +161,23 @@ namespace RuneUI
             }
         }
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(InventoryGui), "UpdateContainer")]
+        private static void InventoryGuiUpdateContainerPrefix(InventoryGui __instance, out Inventory __state)
+        {
+            __state = null;
+            try { __state = FoodPouchGui.HideDragFromSlots(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Keeping food picked up from the slots failed: {e}"); }
+        }
+
+        [HarmonyFinalizer]
+        [HarmonyPatch(typeof(InventoryGui), "UpdateContainer")]
+        private static void InventoryGuiUpdateContainerFinalizer(InventoryGui __instance, Inventory __state)
+        {
+            try { FoodPouchGui.RestoreDragFromSlots(__instance, __state); }
+            catch (Exception e) { Plugin.Log.LogError($"Restoring food picked up from the slots failed: {e}"); }
+        }
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(InventoryGrid), "UpdateGui")]
         private static void InventoryGridUpdateGuiPostfix(InventoryGrid __instance)

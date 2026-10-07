@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.1.1
+- Food in the food slots can be picked up with a left click again when no chest is open.
+
 ## 0.1.0
 - First release. A new HUD: health, stamina and eitr as themed bars at the bottom centre with the
   hotbar under them, your forsaken power as a slot next to the hotbar, a second quick bar for

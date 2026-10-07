@@ -97,6 +97,25 @@ namespace RuneUI
             return true;
         }
 
+        /// <summary>
+        /// InventoryGui.UpdateContainer prefix. With no chest open, vanilla cancels every drag that does
+        /// not come from the player inventory, which drops food picked up from the slots the next frame.
+        /// Shows vanilla the player inventory for that check; returns the real one to restore.
+        /// </summary>
+        public static Inventory HideDragFromSlots(InventoryGui gui)
+        {
+            Inventory dragged = DragInventory(gui);
+            if (!FoodPouch.Owns(dragged) || Player.m_localPlayer == null) return null;
+            DragInventory(gui) = Player.m_localPlayer.GetInventory();
+            return dragged;
+        }
+
+        /// <summary>InventoryGui.UpdateContainer finalizer: undoes <see cref="HideDragFromSlots"/>.</summary>
+        public static void RestoreDragFromSlots(InventoryGui gui, Inventory dragged)
+        {
+            if (dragged != null && DragItem(gui) != null) DragInventory(gui) = dragged;
+        }
+
         private static void Build(InventoryGui gui)
         {
             Remove();
