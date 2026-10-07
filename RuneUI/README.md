@@ -18,9 +18,18 @@ restyled in later versions.
   Alt shown once on its left. Hold Left Alt and press 1 to 8 to use its items. While Alt is held, 1
   to 8 do not use the normal hotbar.
 - **Food slots.** Three extra slots that only take food, shown right of the quick bar and below your
-  inventory, or right of it while a chest is open. Drag food into them in the inventory and eat it with Z, U and B (Z can be switched to Y
-  for keyboards with Y and Z swapped). Food in them counts toward your weight and goes into your
-  tombstone when you die.
+  inventory, or right of it while a chest is open. Drag food into them in the inventory and eat it with Z, V and B (Z can be switched to Y
+  for keyboards with Y and Z swapped). Food in them counts toward your weight. V is also vanilla's
+  key for toggling auto pickup, so rebind that in the game's controls.
+- **Gear slots.** Six slots for worn armour right of the inventory: head, chest, legs, cape, utility and
+  trinket. An empty slot shows a faint icon of what goes there. What is in them is worn, so armour no
+  longer takes up inventory space.
+  Put armour on in any way and it moves into its slot; drag it out or right click it and it comes off.
+  Workbenches repair and upgrade it in the slots, and it counts toward your weight. While you hold an
+  item, the food and gear slots it fits in light up.
+- **Back in place after death.** Food and gear slots go into your tombstone with everything else.
+  When you pick your things up again, food goes back into its slot and everything you wore is put on
+  again, as long as you have not put something else in that place meanwhile.
 - **Buffs in one place.** Eaten food and status effects such as Rested or Wet are shown together as
   hotbar sized icons in the bottom left, filling rows upwards. Rested and Resting show your comfort
   level in the corner. Like vanilla, a food icon pulses when
@@ -47,9 +56,9 @@ With a mod manager, just install it. Manually, drop `RuneUI.dll` into `BepInEx/p
 Client side only. It changes nothing that other players or the server can see, so it works on any
 server and nobody else needs it. The party list reads the health every client already receives.
 
-The food slots are saved inside your character file. If you remove the mod, food in them stays in the
-save and is back when you install it again, so empty the slots first if you want to keep that food
-without the mod.
+The food and gear slots are saved inside your character file. If you remove the mod, the items in them
+stay in the save and are back when you install it again, so empty the slots first if you want to keep
+those items without the mod.
 
 ## Settings
 
@@ -158,7 +167,7 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Enabled | `true` | Show the three food slots. Off only hides them; food already in them is kept |
-| First key | `Z` | Key for the first slot, next to U and B. Pick `Y` if your keyboard has Y and Z swapped |
+| First key | `Z` | Key for the first slot, next to V and B. Pick `Y` if your keyboard has Y and Z swapped |
 | Inventory offset X | `0` | Horizontal position of the food slots under the inventory. With a chest open they sit right of the inventory instead |
 | Inventory offset Y | `-12` | Vertical position of the food slots under the inventory. With a chest open they sit right of the inventory instead |
 
@@ -172,3 +181,9 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Anchor | `Right` | Screen point for the toasts. Older toasts move away from it |
 | Offset X | `-20` | Horizontal offset |
 | Offset Y | `-60` | Vertical offset |
+
+### 10 - Gear slots
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| Enabled | `true` | Show the six gear slots right of the inventory. What is in them is worn. Off only hides them; gear already in them stays worn |

@@ -84,6 +84,8 @@ namespace RuneUI
         internal static ConfigEntry<float> FoodInventoryOffsetX;
         internal static ConfigEntry<float> FoodInventoryOffsetY;
 
+        internal static ConfigEntry<bool> GearSlotsEnabled;
+
         internal static ConfigEntry<bool> SkillToastsEnabled;
         internal static ConfigEntry<float> SkillToastsDuration;
         internal static ConfigEntry<int> SkillToastsMax;
@@ -231,9 +233,14 @@ namespace RuneUI
                 "counts toward your weight and goes into your tombstone when you die. Turning this off only hides " +
                 "the slots; food already in them is kept.");
             FoodFirstKey = Config.Bind("8 - Food slots", "First key", FirstFoodKey.Z,
-                "Key for the first food slot, next to U and B for the other two. Pick Y if your keyboard has Y and Z swapped.");
+                "Key for the first food slot, next to V and B for the other two. Pick Y if your keyboard has Y and Z swapped.");
             FoodInventoryOffsetX = BindOffset("8 - Food slots", "Inventory offset X", 0f, "Horizontal position of the food slots under the inventory. With a chest open they sit right of the inventory instead.");
             FoodInventoryOffsetY = BindOffset("8 - Food slots", "Inventory offset Y", -12f, "Vertical position of the food slots under the inventory. With a chest open they sit right of the inventory instead.");
+
+            GearSlotsEnabled = Config.Bind("10 - Gear slots", "Enabled", true,
+                "Six slots for worn armour (head, chest, legs, cape, utility and trinket), shown right of the " +
+                "inventory. What is in them is worn: put armour on and it moves into its slot, take " +
+                "it out and it comes off. Turning this off hides the slots; gear already in them stays worn.");
 
             SkillToastsEnabled = Config.Bind("9 - Skill toasts", "Enabled", true,
                 "Show a toast with the skill's level and progress to the next level whenever a skill gains experience.");

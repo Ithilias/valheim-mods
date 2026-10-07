@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using UnityEngine;
 
 namespace RuneUI
 {
@@ -110,6 +111,7 @@ namespace RuneUI
             if (!Failed.Contains("quick bar")) Guard("quick bar", () => QuickBar2.HandleInput(__instance));
             if (!Failed.Contains("food slots") && QuickBar2.CanTakeInput(__instance))
                 Guard("food slots", () => FoodPouch.HandleInput(__instance));
+            if (!Failed.Contains("slots after death")) Guard("slots after death", () => DeathKeeper.Update(__instance));
         }
 
         /// <summary>While the quick bar modifier is held, number keys belong to the quick bar.</summary>
@@ -134,48 +136,76 @@ namespace RuneUI
             }
         }
     
-        // Food slots: the inventory screen. A failure here hides the slots but never touches the food.
+        // Food and gear slots: the inventory screen. A failure here hides the slots but never touches
+        // the items in them.
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(InventoryGui), "UpdateInventory")]
         private static void InventoryGuiUpdateInventoryPostfix(InventoryGui __instance, Player player)
         {
-            if (!Failed.Contains("food slots"))
-                Guard("food slots", () => FoodPouchGui.Update(__instance, player), FoodPouchGui.Remove);
+            if (!Failed.Contains("inventory slots"))
+                Guard("inventory slots", () => InventoryPanels.Update(__instance, player), InventoryPanels.Remove);
+        }
+
+        private struct SelectState
+        {
+            public bool Allowed;
+            public Inventory DragFrom;
+            public ItemDrop.ItemData Dragged;
+            public Vector2i DragPos;
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InventoryGui), "OnSelectedItem")]
         private static bool InventoryGuiOnSelectedItemPrefix(InventoryGui __instance, InventoryGrid grid,
-            ItemDrop.ItemData item, InventoryGrid.Modifier mod)
+            ItemDrop.ItemData item, Vector2i pos, InventoryGrid.Modifier mod, out SelectState __state)
         {
-            // Not gated on any setting: food already in the slots must stay consistent.
+            // Vanilla unequips and re-equips around every move; the gear slots handle that after it.
+            GearSlots.Suspend();
+            __state = default;
+            // Not gated on any setting: items already in the slots must stay consistent.
             try
             {
-                return FoodPouchGui.AllowSelect(__instance, grid, item, mod);
+                __state.Allowed = InventoryPanels.AllowSelect(__instance, grid, item, pos, mod,
+                    out __state.DragFrom, out __state.Dragged);
+                if (__state.Dragged != null) __state.DragPos = __state.Dragged.m_gridPos;
+                return __state.Allowed;
             }
             catch (Exception e)
             {
-                Plugin.Log.LogError($"Food slot check failed, blocking the move to be safe: {e}");
+                Plugin.Log.LogError($"Inventory slot check failed, blocking the move to be safe: {e}");
                 return false;
             }
         }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(InventoryGui), "OnSelectedItem")]
+        private static void InventoryGuiOnSelectedItemPostfix(InventoryGrid grid, Vector2i pos, SelectState __state)
+        {
+            if (!__state.Allowed || __state.Dragged == null) return;
+            try { GearSlots.AfterDrop(grid, pos, __state.DragFrom, __state.DragPos); }
+            catch (Exception e) { Plugin.Log.LogError($"Wearing gear dropped into the slots failed: {e}"); }
+        }
+
+        [HarmonyFinalizer]
+        [HarmonyPatch(typeof(InventoryGui), "OnSelectedItem")]
+        private static void InventoryGuiOnSelectedItemFinalizer() => GearSlots.Resume();
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InventoryGui), "UpdateContainer")]
         private static void InventoryGuiUpdateContainerPrefix(InventoryGui __instance, out Inventory __state)
         {
             __state = null;
-            try { __state = FoodPouchGui.HideDragFromSlots(__instance); }
-            catch (Exception e) { Plugin.Log.LogError($"Keeping food picked up from the slots failed: {e}"); }
+            try { __state = InventoryPanels.HideDragFromSlots(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Keeping an item picked up from the slots failed: {e}"); }
         }
 
         [HarmonyFinalizer]
         [HarmonyPatch(typeof(InventoryGui), "UpdateContainer")]
         private static void InventoryGuiUpdateContainerFinalizer(InventoryGui __instance, Inventory __state)
         {
-            try { FoodPouchGui.RestoreDragFromSlots(__instance, __state); }
-            catch (Exception e) { Plugin.Log.LogError($"Restoring food picked up from the slots failed: {e}"); }
+            try { InventoryPanels.RestoreDragFromSlots(__instance, __state); }
+            catch (Exception e) { Plugin.Log.LogError($"Restoring an item picked up from the slots failed: {e}"); }
         }
 
         [HarmonyPostfix]
@@ -185,8 +215,8 @@ namespace RuneUI
             if (!Failed.Contains("quality rings")) Guard("quality rings", () => QualityRing.UpdateGrid(__instance));
         }
 
-        // Food slots: saving, weight and death. These always run, even with the mod switched off,
-        // so food in the slots is never lost.
+        // Food and gear slots: saving, weight, wearing and death. These always run, even with the mod
+        // switched off, so items in the slots are never lost.
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), nameof(Player.Load))]
@@ -194,6 +224,8 @@ namespace RuneUI
         {
             try { FoodPouch.OnLoad(__instance); }
             catch (Exception e) { Plugin.Log.LogError($"Loading the food slots failed: {e}"); }
+            try { GearSlots.OnLoad(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Loading the gear slots failed: {e}"); }
         }
 
         [HarmonyPrefix]
@@ -202,23 +234,103 @@ namespace RuneUI
         {
             try { FoodPouch.OnSave(__instance); }
             catch (Exception e) { Plugin.Log.LogError($"Saving the food slots failed: {e}"); }
+            try { GearSlots.OnSave(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Saving the gear slots failed: {e}"); }
         }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetTotalWeight))]
         private static void InventoryGetTotalWeightPostfix(Inventory __instance, ref float __result)
         {
-            __result += FoodPouch.ExtraWeight(__instance);
+            __result += FoodPouch.ExtraWeight(__instance) + GearSlots.ExtraWeight(__instance);
+        }
+
+        /// <summary>Vanilla only equips items in the wearer's inventory; let the gear slots count as theirs.</summary>
+        [HarmonyTranspiler]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.EquipItem))]
+        private static IEnumerable<CodeInstruction> EquipItemTranspiler(IEnumerable<CodeInstruction> instructions)
+        {
+            var contains = AccessTools.Method(typeof(Inventory), nameof(Inventory.ContainsItem));
+            var holds = AccessTools.Method(typeof(GearSlots), nameof(GearSlots.HoldsForEquip));
+            bool replaced = false;
+            foreach (var instruction in instructions)
+            {
+                if (!replaced && instruction.Calls(contains))
+                {
+                    instruction.opcode = System.Reflection.Emit.OpCodes.Call;
+                    instruction.operand = holds;
+                    replaced = true;
+                }
+                yield return instruction;
+            }
+            if (!replaced) Plugin.Log.LogError("Could not find the inventory check in EquipItem; gear in the gear slots cannot be worn.");
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.EquipItem))]
+        private static void EquipItemPostfix(Humanoid __instance, ItemDrop.ItemData item, bool __result)
+        {
+            try { GearSlots.AfterEquip(__instance, item, __result); }
+            catch (Exception e) { Plugin.Log.LogError($"Moving worn gear into its slot failed: {e}"); }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UnequipItem))]
+        private static void UnequipItemPostfix(Humanoid __instance, ItemDrop.ItemData item)
+        {
+            try { GearSlots.AfterUnequip(__instance, item); }
+            catch (Exception e) { Plugin.Log.LogError($"Moving gear out of its slot failed: {e}"); }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetWornItems))]
+        private static void InventoryGetWornItemsPostfix(Inventory __instance, List<ItemDrop.ItemData> worn)
+        {
+            try { GearSlots.AddWorn(__instance, worn); }
+            catch (Exception e) { Plugin.Log.LogError($"Listing gear for repair failed: {e}"); }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetAllItems), typeof(string), typeof(List<ItemDrop.ItemData>))]
+        private static void InventoryGetAllItemsByNamePostfix(Inventory __instance, string name, List<ItemDrop.ItemData> items)
+        {
+            try { GearSlots.AddNamed(__instance, name, items); }
+            catch (Exception e) { Plugin.Log.LogError($"Listing gear for upgrades failed: {e}"); }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(InventoryGui), "DoCrafting")]
+        private static void DoCraftingPrefix(InventoryGui __instance, Player player, out GearSlots.CraftState __state)
+        {
+            __state = new GearSlots.CraftState { Slot = -1 };
+            try { __state = GearSlots.BeforeCraft(__instance, player); }
+            catch (Exception e) { Plugin.Log.LogError($"Preparing gear for an upgrade failed: {e}"); }
+        }
+
+        [HarmonyFinalizer]
+        [HarmonyPatch(typeof(InventoryGui), "DoCrafting")]
+        private static void DoCraftingFinalizer(Player player, GearSlots.CraftState __state)
+        {
+            try { GearSlots.AfterCraft(player, __state); }
+            catch (Exception e) { Plugin.Log.LogError($"Putting upgraded gear back failed: {e}"); }
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), nameof(Player.CreateTombStone))]
         private static void PlayerCreateTombStonePrefix(Player __instance)
         {
-            try { FoodPouch.OnDeath(__instance); }
-            catch (Exception e) { Plugin.Log.LogError($"Moving the food slots to the tombstone failed: {e}"); }
+            try { DeathKeeper.BeforeTombstone(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Moving the food and gear slots to the tombstone failed: {e}"); }
         }
-    
+
+        [HarmonyFinalizer]
+        [HarmonyPatch(typeof(Player), nameof(Player.CreateTombStone))]
+        private static void PlayerCreateTombStoneFinalizer(Player __instance)
+        {
+            try { DeathKeeper.AfterTombstone(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Tidying up after the tombstone failed: {e}"); }
+        }
+
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Skills), nameof(Skills.RaiseSkill))]
         private static void RaiseSkillPrefix(Skills __instance, Skills.SkillType skillType, out float __state)

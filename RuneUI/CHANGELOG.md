@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.3.0
+- New gear slots right of the inventory: head, chest, legs, cape, utility and trinket. Armour you
+  wear sits there instead of taking up inventory space. Workbenches repair and upgrade it there too.
+  Empty slots show a faint icon of what goes there.
+- While you hold an item, the food and gear slots it fits in light up.
+- After dying, food goes back into the food slots and your gear is put on again when you pick up your
+  tombstone.
+- The second food slot is now eaten with V instead of U, so the three keys sit closer together. V also
+  toggles auto pickup in vanilla, so rebind that in the game's controls.
+- If your inventory is full when you die, the food slots now go into the tombstone instead of onto the
+  ground.
+
 ## 0.2.1
 - The hotbar no longer disappears after you die. All eight slots now always show, empty ones included, like the quick bar. Turn this off with Show empty hotbar slots.
 

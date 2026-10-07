@@ -1,37 +1,27 @@
-using System;
-using System.Linq;
-using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace RuneUI
 {
     /// <summary>
-    /// Three extra inventory slots that only take food. They live in their own inventory, saved in the
-    /// character's custom data, so removing the mod leaves them in the save rather than losing them.
-    /// Their weight counts toward the player's, and they go into the tombstone on death.
+    /// Three extra inventory slots that only take food, saved with the character (see
+    /// <see cref="SavedInventory"/>). They go into the tombstone on death; see <see cref="DeathKeeper"/>.
     /// </summary>
     internal static class FoodPouch
     {
         public const int Size = 3;
-        private const string SaveKey = "ithilias.runeui.foodslots";
 
-        private static Player _owner;
-        private static Inventory _pouch;
-        // If the saved slots could not be read, never write over them.
-        private static bool _loadFailed;
+        private static readonly SavedInventory Store =
+            new SavedInventory("$item_food", "food slots", "ithilias.runeui.foodslots", Size);
 
-        private static readonly Key[] OtherKeys = { Key.U, Key.B };
+        private static readonly Key[] OtherKeys = { Key.V, Key.B };
 
         /// <summary>The local player's food slots, or null before a player exists.</summary>
-        public static Inventory Get()
-        {
-            var player = Player.m_localPlayer;
-            if (player == null) return null;
-            if (!ReferenceEquals(player, _owner)) Attach(player);
-            return _pouch;
-        }
+        public static Inventory Get() => Store.Get();
 
-        public static bool Owns(Inventory inventory) => inventory != null && ReferenceEquals(inventory, _pouch);
+        /// <summary>The slots as they are, without attaching to a new player.</summary>
+        public static Inventory Current => Store.Current;
+
+        public static bool Owns(Inventory inventory) => Store.Owns(inventory);
 
         public static bool IsFood(ItemDrop.ItemData item) =>
             item != null && (item.m_shared.m_food > 0f || item.m_shared.m_foodStamina > 0f || item.m_shared.m_foodEitr > 0f);
@@ -48,60 +38,11 @@ namespace RuneUI
             return string.IsNullOrEmpty(name) ? key.ToString() : name.ToUpperInvariant();
         }
 
-        private static void Attach(Player player)
-        {
-            _owner = player;
-            _pouch = new Inventory("$item_food", null, Size, 1);
-            _loadFailed = false;
-            if (!player.m_customData.TryGetValue(SaveKey, out string data) || string.IsNullOrEmpty(data)) return;
-            try
-            {
-                _pouch.Load(new ZPackage(data));
-            }
-            catch (Exception e)
-            {
-                _loadFailed = true;
-                Plugin.Log.LogError($"Could not read the saved food slots; they are left untouched in the save: {e}");
-            }
-        }
+        public static void OnLoad(Player player) => Store.OnLoad(player);
 
-        /// <summary>Player.Load postfix: read the slots from the freshly loaded custom data.</summary>
-        public static void OnLoad(Player player) => Attach(player);
+        public static void OnSave(Player player) => Store.OnSave(player);
 
-        /// <summary>Player.Save prefix: write the slots into custom data, which vanilla then saves.</summary>
-        public static void OnSave(Player player)
-        {
-            if (!ReferenceEquals(player, _owner) || _pouch == null || _loadFailed) return;
-            var pkg = new ZPackage();
-            _pouch.Save(pkg);
-            player.m_customData[SaveKey] = pkg.GetBase64();
-        }
-
-        /// <summary>Inventory.GetTotalWeight postfix: the slots weigh on the player like the inventory does.</summary>
-        public static float ExtraWeight(Inventory inventory)
-        {
-            if (_owner == null || _pouch == null || !ReferenceEquals(inventory, _owner.GetInventory())) return 0f;
-            return _pouch.GetTotalWeight();
-        }
-
-        /// <summary>
-        /// Player.CreateTombStone prefix: move the food into the inventory so vanilla's death rules
-        /// (tombstone, keep or delete) apply to it. Whatever does not fit is dropped where the player died.
-        /// </summary>
-        public static void OnDeath(Player player)
-        {
-            if (!ReferenceEquals(player, _owner) || _pouch == null || _pouch.NrOfItems() == 0) return;
-            if (ZoneSystem.instance != null && ZoneSystem.instance.GetGlobalKey(GlobalKeys.DeathKeepInventory)) return;
-
-            Inventory inventory = player.GetInventory();
-            foreach (var item in _pouch.GetAllItems().ToArray())
-            {
-                inventory.MoveItemToThis(_pouch, item);
-                if (!_pouch.ContainsItem(item)) continue;
-                _pouch.RemoveItem(item);
-                ItemDrop.DropItem(item, item.m_stack, player.GetCenterPoint(), Quaternion.identity);
-            }
-        }
+        public static float ExtraWeight(Inventory inventory) => Store.ExtraWeight(inventory);
 
         /// <summary>Called after Player.Update for the local player.</summary>
         public static void HandleInput(Player player)
@@ -119,11 +60,6 @@ namespace RuneUI
             }
         }
 
-        public static void ResetState()
-        {
-            _owner = null;
-            _pouch = null;
-            _loadFailed = false;
-        }
+        public static void ResetState() => Store.ResetState();
     }
 }
