@@ -55,6 +55,7 @@ namespace RuneUI
         internal static ConfigEntry<HudAnchor> HotbarAnchor;
         internal static ConfigEntry<float> HotbarOffsetX;
         internal static ConfigEntry<float> HotbarOffsetY;
+        internal static ConfigEntry<float> HotbarScale;
         internal static ConfigEntry<bool> PowerSlot;
         internal static ConfigEntry<bool> UnifyBuffs;
         internal static ConfigEntry<HudAnchor> BuffsAnchor;
@@ -179,6 +180,10 @@ namespace RuneUI
                 "Screen point the hotbar is placed relative to.");
             HotbarOffsetX = BindOffset("5 - HUD layout", "Hotbar offset X", 0f, "Horizontal offset from the anchor.");
             HotbarOffsetY = BindOffset("5 - HUD layout", "Hotbar offset Y", 86f, "Vertical offset from the anchor.");
+            HotbarScale = Config.Bind("5 - HUD layout", "Hotbar scale", 1f,
+                new ConfigDescription("Size of the hotbar and quick bar, on top of HUD scale. They shrink and grow " +
+                    "around the hotbar anchor, so the slots stay together. The hotbar's size needs Move hotbar.",
+                    new AcceptableValueRange<float>(0.5f, 2f)));
             PowerSlot = Config.Bind("5 - HUD layout", "Forsaken power slot", true,
                 "Show your forsaken power as a slot right of the hotbar, with its key and cooldown, instead of the vanilla display.");
             UnifyBuffs = Config.Bind("5 - HUD layout", "Unify buffs", true,

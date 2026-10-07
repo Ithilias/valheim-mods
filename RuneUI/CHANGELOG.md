@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.0
+- New setting Hotbar scale makes the hotbar and quick bar smaller or larger without changing the rest of the HUD. They stay centred on the hotbar anchor.
+
 ## 0.1.1
 - Food in the food slots can be picked up with a left click again when no chest is open.
 

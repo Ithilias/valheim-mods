@@ -49,12 +49,12 @@ namespace RuneUI
                 // Under the hotbar; this bar's own offsets only nudge it from there.
                 float top = Theme.Bounds((RectTransform)Slots[0].Go.transform, _root.parent).yMax;
                 Theme.PlaceStacked(_root, Plugin.HotbarOffsetX.Value + Plugin.QuickBarOffsetX.Value, top,
-                    hotbarBottom - Plugin.StackGap.Value + Plugin.QuickBarOffsetY.Value, Hotbar.BaseScale);
+                    hotbarBottom - Plugin.StackGap.Value + Plugin.QuickBarOffsetY.Value, Hotbar.BarScale);
             }
             else
             {
                 Theme.Place(_root, Plugin.QuickBarAnchor.Value, Plugin.QuickBarOffsetX.Value,
-                    Plugin.QuickBarOffsetY.Value, Hotbar.BaseScale);
+                    Plugin.QuickBarOffsetY.Value, Hotbar.BarScale);
             }
             bool show = !player.IsDead();
             if (_root.gameObject.activeSelf != show) _root.gameObject.SetActive(show);

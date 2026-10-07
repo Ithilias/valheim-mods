@@ -121,6 +121,7 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Hotbar anchor | `Bottom` | Screen point for the hotbar |
 | Hotbar offset X | `0` | Horizontal offset |
 | Hotbar offset Y | `86` | Vertical offset |
+| Hotbar scale | `1` | Size of the hotbar and quick bar on top of `HUD scale`, 0.5 to 2. They shrink and grow around the hotbar anchor, so the slots stay together. The hotbar's size needs `Move hotbar` |
 | Forsaken power slot | `true` | Show your forsaken power as a slot right of the hotbar instead of the vanilla display |
 | Unify buffs | `true` | Show eaten food and status effects together as hotbar sized icons instead of the vanilla displays |
 | Buffs anchor | `BottomLeft` | Screen point for the buffs. Rows fill away from it |

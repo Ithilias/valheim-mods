@@ -29,6 +29,9 @@ namespace RuneUI
         /// <summary>The bar's scale before this mod touched it.</summary>
         public static float BaseScale => _moved ? _origScale.x : _bar != null ? _bar.transform.localScale.x : 1f;
 
+        /// <summary>Base scale for the hotbar and quick bar, with their own size setting applied.</summary>
+        public static float BarScale => BaseScale * Plugin.HotbarScale.Value;
+
         /// <summary>Size and pivot of one slot, from the prefab every slot is cloned from.</summary>
         public static void SlotGeometry(HotkeyBar bar, out Vector2 size, out Vector2 pivot, out float span)
         {
@@ -148,7 +151,7 @@ namespace RuneUI
             SlotGeometry(bar, out Vector2 size, out Vector2 pivot, out float span);
             HotbarPlacement(out HudAnchor hudAnchor, out float x, out float y);
             Vector2 anchor = Theme.AnchorPoint(hudAnchor);
-            float scale = Plugin.HudScale.Value * _origScale.x;
+            float scale = Plugin.HudScale.Value * Plugin.HotbarScale.Value * _origScale.x;
             var boxPivot = new Vector2(anchor.x * span - pivot.x * size.x, anchor.y * size.y - pivot.y * size.y);
             var pos = new Vector2(x, y) - boxPivot * scale;
 
