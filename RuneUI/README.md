@@ -31,7 +31,8 @@ restyled in later versions.
   item, the quick and gear slots it fits in light up.
 - **Back in place after death.** Quick and gear slots go into your tombstone with everything else.
   When you pick your things up again, items go back into their quick slot and everything you wore is
-  put on again, as long as you have not put something else in that place meanwhile.
+  put on again, as long as you have not put something else in that place meanwhile. Settings let you
+  keep the gear or quick slots on death instead, or skip re-equipping.
 - **Buffs in one place.** Eaten food and status effects such as Rested or Wet are shown together as
   hotbar sized icons in the bottom left, filling rows upwards. Rested and Resting show your comfort
   level in the corner. Like vanilla, a food icon pulses when
@@ -210,3 +211,12 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Enabled | `true` | Show the six gear slots right of the inventory. What is in them is worn. Off only hides them; gear already in them stays worn |
+
+### 11 - Death
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| Keep gear | `false` | Gear in the gear slots stays with you when you die, and you still wear it after respawning. Makes dying easier than vanilla |
+| Keep quick slots | `false` | Items in the quick slots stay with you when you die. Makes dying easier than vanilla |
+| Re-equip armour | `true` | When you pick up your tombstone, put the armour you wore back on |
+| Re-equip weapons | `true` | When you pick up your tombstone, take the weapons, shield, tools and ammo you held back in hand |

@@ -18,14 +18,23 @@ namespace RuneUI
         private static bool _dirty;
         private static Inventory _watched;
         private static int _grownFrom = -1;
+        private static bool _suspended;
+        // Gear kept on death, which vanilla's death still takes off.
+        private static readonly List<ItemDrop.ItemData> KeptWorn = new List<ItemDrop.ItemData>();
 
         /// <summary>Player.CreateTombStone prefix.</summary>
         public static void BeforeTombstone(Player player)
         {
             _grownFrom = -1;
+            KeptWorn.Clear();
             if (!ReferenceEquals(player, Player.m_localPlayer)) return;
+            // Vanilla takes everything off on death; kept gear must not move out of its slot for it.
+            GearSlots.Suspend();
+            _suspended = true;
             if (ZoneSystem.instance != null && ZoneSystem.instance.GetGlobalKey(GlobalKeys.DeathKeepInventory)) return;
             bool keepEquipped = ZoneSystem.instance != null && ZoneSystem.instance.GetGlobalKey(GlobalKeys.DeathKeepEquip);
+            bool keepGear = keepEquipped || Plugin.KeepGearOnDeath.Value;
+            bool keepQuick = Plugin.KeepQuickOnDeath.Value;
 
             Inventory main = player.GetInventory();
             string id = player.GetPlayerID().ToString();
@@ -35,7 +44,7 @@ namespace RuneUI
 
             var moving = new List<KeyValuePair<Inventory, ItemDrop.ItemData>>();
             Inventory quick = QuickSlots.Current;
-            if (quick != null)
+            if (quick != null && !keepQuick)
                 foreach (var item in quick.GetAllItems())
                 {
                     // Worn items stay with the player like vanilla's, when the world keeps equipment.
@@ -45,7 +54,10 @@ namespace RuneUI
                     moving.Add(new KeyValuePair<Inventory, ItemDrop.ItemData>(quick, item));
                 }
             Inventory gear = GearSlots.Current;
-            if (gear != null && !keepEquipped)
+            if (gear != null && keepGear)
+                foreach (var item in gear.GetAllItems())
+                    if (item.m_equipped) KeptWorn.Add(item);
+            if (gear != null && !keepGear)
                 foreach (var item in gear.GetAllItems())
                 {
                     if (item.m_equipped) item.m_customData[EquipKey] = id;
@@ -78,6 +90,14 @@ namespace RuneUI
         /// <summary>Player.CreateTombStone postfix: undo the extra rows and forget marks on what stayed.</summary>
         public static void AfterTombstone(Player player)
         {
+            if (_suspended)
+            {
+                _suspended = false;
+                GearSlots.Resume();
+            }
+            // Saved as worn, so the respawned character wears it again on load.
+            foreach (var item in KeptWorn) item.m_equipped = true;
+            KeptWorn.Clear();
             if (!ReferenceEquals(player, Player.m_localPlayer)) return;
             Inventory main = player.GetInventory();
             foreach (var item in main.GetAllItems())
@@ -148,7 +168,8 @@ namespace RuneUI
                         && SavedInventory.Move(main, quick, item, new Vector2i(slot, 0)))
                         from = quick;
                 }
-                if (worn && wornBy == id && !item.m_equipped && from.ContainsItem(item) && PlaceFree(player, item))
+                bool wear = GearSlots.SlotFor(item) >= 0 ? Plugin.ReequipArmour.Value : Plugin.ReequipWeapons.Value;
+                if (worn && wear && wornBy == id && !item.m_equipped && from.ContainsItem(item) && PlaceFree(player, item))
                 {
                     // Armour then moves into its gear slot by itself.
                     player.EquipItem(item);

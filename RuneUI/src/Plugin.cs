@@ -88,6 +88,11 @@ namespace RuneUI
 
         internal static ConfigEntry<bool> GearSlotsEnabled;
 
+        internal static ConfigEntry<bool> KeepGearOnDeath;
+        internal static ConfigEntry<bool> KeepQuickOnDeath;
+        internal static ConfigEntry<bool> ReequipArmour;
+        internal static ConfigEntry<bool> ReequipWeapons;
+
         internal static ConfigEntry<bool> SkillToastsEnabled;
         internal static ConfigEntry<float> SkillToastsDuration;
         internal static ConfigEntry<int> SkillToastsMax;
@@ -253,6 +258,17 @@ namespace RuneUI
                 "Six slots for worn armour (head, chest, legs, cape, utility and trinket), shown right of the " +
                 "inventory. What is in them is worn: put armour on and it moves into its slot, take " +
                 "it out and it comes off. Turning this off hides the slots; gear already in them stays worn.");
+
+            KeepGearOnDeath = Config.Bind("11 - Death", "Keep gear", false,
+                "Gear in the gear slots stays with you when you die instead of going into the tombstone, and you " +
+                "still wear it after respawning. This makes dying easier than vanilla.");
+            KeepQuickOnDeath = Config.Bind("11 - Death", "Keep quick slots", false,
+                "Items in the quick slots stay with you when you die instead of going into the tombstone. This " +
+                "makes dying easier than vanilla.");
+            ReequipArmour = Config.Bind("11 - Death", "Re-equip armour", true,
+                "When you pick up your tombstone, put the armour you wore back on.");
+            ReequipWeapons = Config.Bind("11 - Death", "Re-equip weapons", true,
+                "When you pick up your tombstone, take the weapons, shield, tools and ammo you held back in hand.");
 
             SkillToastsEnabled = Config.Bind("9 - Skill toasts", "Enabled", true,
                 "Show a toast with the skill's level and progress to the next level whenever a skill gains experience.");

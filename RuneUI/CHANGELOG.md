@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+- New death settings: keep your gear or quick slot items when you die, and choose whether armour and
+  weapons are put back on when you pick up your tombstone. Keeping items is off by default.
+
 ## 0.5.0
 - Switching from Equipment and Quick Slots: the items in its quick and equipment slots move into Rune
   UI's slots the first time you log in, instead of being dropped where you spawn.
