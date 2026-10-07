@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0
+- New balance settings, all off by default: wear up to three utility items at once, add up to five
+  inventory rows, and change your base carry weight.
+
 ## 0.6.0
 - New death settings: keep your gear or quick slot items when you die, and choose whether armour and
   weapons are put back on when you pick up your tombstone. Keeping items is off by default.

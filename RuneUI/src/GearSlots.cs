@@ -5,16 +5,22 @@ using UnityEngine;
 namespace RuneUI
 {
     /// <summary>
-    /// Six slots for worn armour: helmet, chest, legs, cape, utility and trinket. They live in their own
+    /// Slots for worn armour: helmet, chest, legs, cape, utility and trinket, plus a cell for each extra
+    /// utility item <see cref="MultiUtility"/> allows. They live in their own
     /// inventory (see <see cref="SavedInventory"/>), and what is in them is worn. Vanilla only equips,
     /// repairs and upgrades items in the player inventory, so those checks are widened to these slots.
     /// </summary>
     internal static class GearSlots
     {
         public const int Size = 6;
+        public const int UtilitySlot = 4;
+        public const int MaxWidth = Size + MultiUtility.MaxExtra;
 
         private static readonly SavedInventory Store =
-            new SavedInventory("Gear", "gear slots", "ithilias.runeui.gearslots", Size);
+            new SavedInventory("Gear", "gear slots", "ithilias.runeui.gearslots", MaxWidth);
+
+        private static readonly AccessTools.FieldRef<Inventory, int> Width =
+            AccessTools.FieldRefAccess<Inventory, int>("m_width");
 
         // Items whose icons stand for each slot while it is empty; any item of the slot's type if none exist.
         private static readonly string[] PlaceholderItems =
@@ -31,7 +37,65 @@ namespace RuneUI
             Store.Loaded = OnLoaded;
         }
 
-        public static Inventory Get() => Store.Get();
+        public static Inventory Get()
+        {
+            Inventory inventory = Store.Get();
+            if (inventory != null) Resize(inventory);
+            return inventory;
+        }
+
+        /// <summary>Cells shown: the six slots and one per extra utility item allowed.</summary>
+        public static int Cells => Size + MultiUtility.Allowed;
+
+        /// <summary>
+        /// Matches the cells to the extra utility setting. Items in cells that go away are taken off
+        /// and moved to the inventory; if they do not fit, those cells stay until there is room.
+        /// </summary>
+        private static void Resize(Inventory inventory)
+        {
+            int wanted = Cells;
+            if (inventory.GetWidth() == wanted) return;
+            Player player = Store.Owner;
+            int needed = wanted;
+            Suspend();
+            try
+            {
+                foreach (var item in new List<ItemDrop.ItemData>(inventory.GetAllItems()))
+                {
+                    if (item.m_gridPos.x < wanted) continue;
+                    Inventory main = player != null ? player.GetInventory() : null;
+                    if (main != null && SavedInventory.FindEmpty(main, out Vector2i pos))
+                    {
+                        if (item.m_equipped) player.UnequipItem(item);
+                        if (SavedInventory.Move(inventory, main, item, pos)) continue;
+                    }
+                    needed = Mathf.Max(needed, item.m_gridPos.x + 1);
+                }
+            }
+            finally
+            {
+                Resume();
+            }
+            if (inventory.GetWidth() != needed) Width(inventory) = needed;
+        }
+
+        /// <summary>Whether <paramref name="item"/> may go into cell <paramref name="cell"/>.</summary>
+        public static bool Fits(ItemDrop.ItemData item, int cell)
+        {
+            int slot = SlotFor(item);
+            if (slot == cell) return true;
+            return slot == UtilitySlot && cell >= Size && cell < Cells;
+        }
+
+        /// <summary>The cell armour moves into when worn: its slot, or for utility items the first free utility cell.</summary>
+        private static int CellFor(Inventory gear, ItemDrop.ItemData item)
+        {
+            int slot = SlotFor(item);
+            if (slot != UtilitySlot || gear.GetItemAt(slot, 0) == null) return slot;
+            for (int cell = Size; cell < Cells; cell++)
+                if (gear.GetItemAt(cell, 0) == null) return cell;
+            return slot;
+        }
 
         public static Inventory Current => Store.Current;
 
@@ -40,6 +104,7 @@ namespace RuneUI
         /// <summary>The faint icon an empty slot shows, taken from a vanilla item worn there.</summary>
         public static Sprite Placeholder(int slot)
         {
+            if (slot >= Size) slot = UtilitySlot;
             ObjectDB db = ObjectDB.instance;
             if (db == null) return null;
             if (!ReferenceEquals(db, _placeholderDb))
@@ -141,10 +206,11 @@ namespace RuneUI
         /// <summary>Moves worn armour from the inventory or a quick slot into its gear slot.</summary>
         public static void MoveIn(Player player, ItemDrop.ItemData item)
         {
-            int slot = SlotFor(item);
+            int slot = -1;
             Inventory gear = ReferenceEquals(player, Store.Owner) ? Store.Current : Store.Get();
             Inventory main = player.GetInventory();
-            if (slot < 0 || gear == null) return;
+            if (gear == null || SlotFor(item) < 0) return;
+            slot = CellFor(gear, item);
             // The swap below puts what was in the slot where the item came from.
             if (!main.ContainsItem(item))
             {

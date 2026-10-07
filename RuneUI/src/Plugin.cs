@@ -93,6 +93,10 @@ namespace RuneUI
         internal static ConfigEntry<bool> ReequipArmour;
         internal static ConfigEntry<bool> ReequipWeapons;
 
+        internal static ConfigEntry<int> UtilitySlots;
+        internal static ConfigEntry<int> ExtraInventoryRows;
+        internal static ConfigEntry<float> BaseCarryWeight;
+
         internal static ConfigEntry<bool> SkillToastsEnabled;
         internal static ConfigEntry<float> SkillToastsDuration;
         internal static ConfigEntry<int> SkillToastsMax;
@@ -269,6 +273,18 @@ namespace RuneUI
                 "When you pick up your tombstone, put the armour you wore back on.");
             ReequipWeapons = Config.Bind("11 - Death", "Re-equip weapons", true,
                 "When you pick up your tombstone, take the weapons, shield, tools and ammo you held back in hand.");
+
+            UtilitySlots = Config.Bind("12 - Balance", "Utility items", 1,
+                new ConfigDescription("Utility items, such as belts and the Wishbone, you can wear at once. Vanilla allows " +
+                    "one. Each extra one adds a gear slot. You can never wear two of the same item, and the extra ones " +
+                    "do not show on your character.", new AcceptableValueRange<int>(1, 1 + MultiUtility.MaxExtra)));
+            ExtraInventoryRows = Config.Bind("12 - Balance", "Extra inventory rows", 0,
+                new ConfigDescription("Rows added to your inventory, up to the game's limit of 9 rows. Items in rows " +
+                    "you remove move to free cells, or are dropped on the ground if there is no room.",
+                    new AcceptableValueRange<int>(0, 5)));
+            BaseCarryWeight = Config.Bind("12 - Balance", "Base carry weight", 300f,
+                new ConfigDescription("How much you can carry before belts and other bonuses. 300 is vanilla and leaves " +
+                    "the value to the game and other mods.", new AcceptableValueRange<float>(50f, 5000f)));
 
             SkillToastsEnabled = Config.Bind("9 - Skill toasts", "Enabled", true,
                 "Show a toast with the skill's level and progress to the next level whenever a skill gains experience.");

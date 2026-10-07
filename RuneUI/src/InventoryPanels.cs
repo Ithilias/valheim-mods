@@ -70,7 +70,7 @@ namespace RuneUI
         private static bool Fits(Inventory inventory, Vector2i pos, ItemDrop.ItemData item)
         {
             if (QuickSlots.Owns(inventory)) return QuickSlots.Fits(item);
-            if (GearSlots.Owns(inventory)) return GearSlots.SlotFor(item) == pos.x;
+            if (GearSlots.Owns(inventory)) return GearSlots.Fits(item, pos.x);
             return true;
         }
 

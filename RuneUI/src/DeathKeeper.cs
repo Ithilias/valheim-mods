@@ -181,6 +181,7 @@ namespace RuneUI
         private static bool PlaceFree(Player player, ItemDrop.ItemData item)
         {
             int gearSlot = GearSlots.SlotFor(item);
+            if (gearSlot == GearSlots.UtilitySlot) return MultiUtility.WornCount(player) < 1 + MultiUtility.Allowed;
             if (gearSlot >= 0)
             {
                 Inventory gear = GearSlots.Current;

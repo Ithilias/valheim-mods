@@ -112,6 +112,11 @@ namespace RuneUI
             if (!Failed.Contains("quick slots") && QuickBar2.CanTakeInput(__instance))
                 Guard("quick slots", () => QuickSlots.HandleInput(__instance));
             if (!Failed.Contains("slots after death")) Guard("slots after death", () => DeathKeeper.Update(__instance));
+            if (!Failed.Contains("balance")) Guard("balance", () =>
+            {
+                Balance.Update(__instance);
+                MultiUtility.Update(__instance);
+            });
         }
 
         /// <summary>While the quick bar modifier is held, number keys belong to the quick bar.</summary>
@@ -283,10 +288,7 @@ namespace RuneUI
         {
             try
             {
-                int rows = __instance.TryGetUniqueKeyValue(Player.InventoryRowsKey, out string value) && int.TryParse(value, out int saved)
-                    ? Mathf.Clamp(saved, 0, 9)
-                    : 4;
-                EaqsImport.Run(__instance, rows);
+                EaqsImport.Run(__instance, Balance.Rows(Balance.VanillaRows(__instance)));
             }
             catch (Exception e) { Plugin.Log.LogError($"Taking over Equipment and Quick Slots' items failed: {e}"); }
         }
@@ -335,6 +337,101 @@ namespace RuneUI
                 yield return instruction;
             }
             if (!replaced) Plugin.Log.LogError("Could not find the inventory check in EquipItem; items in the quick and gear slots cannot be worn.");
+        }
+
+        // Extra utility items: vanilla keeps one, these hooks add the others wherever it reads it.
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.EquipItem))]
+        private static void EquipItemPrefix(Humanoid __instance, ItemDrop.ItemData item, out ItemDrop.ItemData __state)
+        {
+            __state = null;
+            try { __state = MultiUtility.BeforeEquip(__instance, item); }
+            catch (Exception e) { Plugin.Log.LogError($"Wearing an extra utility item failed: {e}"); }
+        }
+
+        [HarmonyFinalizer]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.EquipItem))]
+        private static void EquipItemFinalizer(Humanoid __instance, ItemDrop.ItemData item, ItemDrop.ItemData __state, bool __result)
+        {
+            try { MultiUtility.AfterEquip(__instance, item, __state, __result); }
+            catch (Exception e) { Plugin.Log.LogError($"Wearing an extra utility item failed: {e}"); }
+        }
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UnequipItem))]
+        private static void UnequipItemPrefix(Humanoid __instance, ItemDrop.ItemData item, bool triggerEquipEffects)
+        {
+            try { MultiUtility.Unequip(__instance, item, triggerEquipEffects); }
+            catch (Exception e) { Plugin.Log.LogError($"Taking off an extra utility item failed: {e}"); }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.IsItemEquiped))]
+        private static void IsItemEquipedPostfix(Humanoid __instance, ItemDrop.ItemData item, ref bool __result)
+        {
+            if (!__result && MultiUtility.IsWorn(__instance, item)) __result = true;
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.UnequipAllItems))]
+        private static void UnequipAllItemsPostfix(Humanoid __instance) => MultiUtility.UnequipAll(__instance);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Player), nameof(Player.UnequipDeathDropItems))]
+        private static void UnequipDeathDropItemsPostfix(Player __instance) => MultiUtility.UnequipAll(__instance);
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Humanoid), "UpdateEquipmentStatusEffects")]
+        private static void UpdateEquipmentStatusEffectsPrefix(Humanoid __instance) => MultiUtility.BeforeEffects(__instance);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), "UpdateEquipmentStatusEffects")]
+        private static void UpdateEquipmentStatusEffectsPostfix(Humanoid __instance)
+        {
+            try { MultiUtility.AfterEffects(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Effects of extra utility items failed: {e}"); }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), "GetSetCount")]
+        private static void GetSetCountPostfix(Humanoid __instance, string setName, ref int __result) =>
+            __result += MultiUtility.SetCount(__instance, setName);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), nameof(Humanoid.GetEquipmentWeight))]
+        private static void GetEquipmentWeightPostfix(Humanoid __instance, ref float __result) =>
+            __result += MultiUtility.Weight(__instance);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Humanoid), "UpdateEquipment")]
+        private static void UpdateEquipmentPostfix(Humanoid __instance, float dt) => MultiUtility.Drain(__instance, dt);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Player), nameof(Player.GetEquipmentEitrRegenModifier))]
+        private static void GetEquipmentEitrRegenModifierPostfix(Player __instance, ref float __result) =>
+            __result += MultiUtility.EitrRegen(__instance);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Player), "UpdateModifiers")]
+        private static void UpdateModifiersPostfix(Player __instance) => MultiUtility.AddModifiers(__instance);
+
+        // Extra inventory rows: added on top of vanilla's count, which is saved unchanged.
+
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), nameof(Player.SetInventorySize))]
+        private static void SetInventorySizePrefix(Player __instance, ref int rows)
+        {
+            try { Balance.BeforeSetSize(__instance, ref rows); }
+            catch (Exception e) { Plugin.Log.LogError($"Adding inventory rows failed: {e}"); }
+        }
+
+        [HarmonyFinalizer]
+        [HarmonyPatch(typeof(Player), nameof(Player.SetInventorySize))]
+        private static void SetInventorySizeFinalizer(Player __instance)
+        {
+            try { Balance.AfterSetSize(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Saving the inventory rows failed: {e}"); }
         }
 
         [HarmonyPostfix]

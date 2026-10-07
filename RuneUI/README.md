@@ -29,6 +29,8 @@ restyled in later versions.
   Put armour on in any way and it moves into its slot; drag it out or right click it and it comes off.
   Workbenches repair and upgrade it in the slots, and it counts toward your weight. While you hold an
   item, the quick and gear slots it fits in light up.
+- **Balance options.** Off by default: wear up to three utility items at once, add inventory rows, and
+  change the base carry weight.
 - **Back in place after death.** Quick and gear slots go into your tombstone with everything else.
   When you pick your things up again, items go back into their quick slot and everything you wore is
   put on again, as long as you have not put something else in that place meanwhile. Settings let you
@@ -220,3 +222,13 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Keep quick slots | `false` | Items in the quick slots stay with you when you die. Makes dying easier than vanilla |
 | Re-equip armour | `true` | When you pick up your tombstone, put the armour you wore back on |
 | Re-equip weapons | `true` | When you pick up your tombstone, take the weapons, shield, tools and ammo you held back in hand |
+
+### 12 - Balance
+
+These change how the game plays, so agree on them with the people you play with.
+
+| Setting | Default | What it does |
+| --- | --- | --- |
+| Utility items | `1` | Utility items, such as belts and the Wishbone, you can wear at once, 1 to 3. Each extra one adds a gear slot. You can never wear two of the same item, and the extra ones do not show on your character |
+| Extra inventory rows | `0` | Rows added to your inventory, 0 to 5, up to the game's limit of 9 rows. Items in rows you remove move to free cells, or are dropped on the ground if there is no room. Remove items from the extra rows before removing the mod, or the game drops them |
+| Base carry weight | `300` | How much you can carry before belts and other bonuses, 50 to 5000. 300 is vanilla and leaves the value to the game and other mods |

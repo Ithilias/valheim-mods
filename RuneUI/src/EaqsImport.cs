@@ -18,7 +18,8 @@ namespace RuneUI
         private const string BackupKey = "eaqs_backup";
         private const int Width = 8;
 
-        private static readonly string[] GearIds = { "Helmet", "Chest", "Legs", "Shoulder", "Utility", "Trinket" };
+        // Equipment and Quick Slots' slot ids in the order of Rune UI's gear cells.
+        private static readonly string[] GearIds = { "Helmet", "Chest", "Legs", "Shoulder", "Utility", "Trinket", "Utility2", "Utility3" };
 
         /// <summary>Player.OnSpawned prefix: <paramref name="rows"/> is the inventory height vanilla is about to set.</summary>
         public static void Run(Player player, int rows)
@@ -83,7 +84,7 @@ namespace RuneUI
                 return true;
 
             int gearSlot = slot != null ? Array.IndexOf(GearIds, slot) : -1;
-            if (gearSlot >= 0 && gear != null && GearSlots.SlotFor(item) == gearSlot && gear.GetItemAt(gearSlot, 0) == null
+            if (gearSlot >= 0 && gear != null && gearSlot < GearSlots.Cells && GearSlots.Fits(item, gearSlot) && gear.GetItemAt(gearSlot, 0) == null
                 && SavedInventory.Move(main, gear, item, new Vector2i(gearSlot, 0)))
             {
                 // What is in a gear slot is worn.
