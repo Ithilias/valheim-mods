@@ -19,6 +19,9 @@ namespace RuneUI
         private static Vector3 _origScale;
         private static int _styleVersion = -1;
         private static readonly List<Image> StyledImages = new List<Image>();
+        private static readonly HotbarSlot[] EmptySlots = new HotbarSlot[SlotCount];
+        private static readonly bool[] Taken = new bool[SlotCount];
+        private static int _emptyVersion = -1;
 
         public static HotkeyBar Find(Hud hud)
         {
@@ -89,7 +92,55 @@ namespace RuneUI
             }
 
             if (player != null) UpdateRings(bar, player);
+            if (Plugin.ShowEmptySlots.Value) UpdateEmptySlots(bar, player);
+            else RemoveEmptySlots();
             PowerSlot.Update(hud, bar, player);
+        }
+
+        /// <summary>
+        /// Vanilla only builds slots up to the last bound item, and none at all after a death empties
+        /// the inventory. Fill every slot vanilla leaves out with an empty one, so all eight always show.
+        /// </summary>
+        private static void UpdateEmptySlots(HotkeyBar bar, Player player)
+        {
+            if (EmptySlots[0] == null || EmptySlots[0].Go == null || _emptyVersion != Theme.Version)
+            {
+                RemoveEmptySlots();
+                _emptyVersion = Theme.Version;
+                for (int x = 0; x < SlotCount; x++)
+                {
+                    EmptySlots[x] = new HotbarSlot(bar, bar.transform, "RuneUI_EmptySlot" + x);
+                    EmptySlots[x].PlaceAt(bar, x, Vector2.zero);
+                    EmptySlots[x].Clear();
+                    EmptySlots[x].Go.transform.SetAsFirstSibling();
+                }
+            }
+
+            System.Array.Clear(Taken, 0, Taken.Length);
+            foreach (Transform slot in bar.transform)
+            {
+                if (slot.name.StartsWith("RuneUI_")) continue;
+                int x = Mathf.RoundToInt(slot.localPosition.x / bar.m_elementSpace);
+                if (x >= 0 && x < SlotCount) Taken[x] = true;
+            }
+            bool alive = player != null && !player.IsDead();
+            // Vanilla leaves the numbers off when a gamepad is used.
+            bool numbers = !ZInput.IsGamepadActive();
+            for (int x = 0; x < SlotCount; x++)
+            {
+                HotbarSlot.SetActive(EmptySlots[x].Go, alive && !Taken[x]);
+                EmptySlots[x].SetBinding(numbers ? (x + 1).ToString() : "");
+            }
+        }
+
+        private static void RemoveEmptySlots()
+        {
+            for (int x = 0; x < SlotCount; x++)
+            {
+                if (EmptySlots[x] != null && EmptySlots[x].Go != null) Object.Destroy(EmptySlots[x].Go);
+                EmptySlots[x] = null;
+            }
+            _emptyVersion = -1;
         }
 
         /// <summary>Vanilla places hotbar slot x at x times m_elementSpace, which tells each slot's item.</summary>
@@ -211,6 +262,7 @@ namespace RuneUI
         {
             Restore();
             Unstyle();
+            RemoveEmptySlots();
             PowerSlot.Remove();
             if (_bar != null)
                 foreach (Transform slot in _bar.transform) QualityRing.Remove(slot);
@@ -225,6 +277,8 @@ namespace RuneUI
             _moved = false;
             _styleVersion = -1;
             StyledImages.Clear();
+            System.Array.Clear(EmptySlots, 0, EmptySlots.Length);
+            _emptyVersion = -1;
         }
     }
 }

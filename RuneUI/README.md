@@ -118,6 +118,7 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Key hints spacing | `4` | Space between stacked key hints, 0 to 40 |
 | Move hotbar | `true` | Move the vanilla hotbar to the position below |
 | Style hotbar | `true` | Draw hotbar and quick bar slots in the theme |
+| Show empty hotbar slots | `true` | Always show all eight hotbar slots, like the quick bar. Vanilla only shows them up to the last item, and none after a death empties your inventory |
 | Hotbar anchor | `Bottom` | Screen point for the hotbar |
 | Hotbar offset X | `0` | Horizontal offset |
 | Hotbar offset Y | `86` | Vertical offset |

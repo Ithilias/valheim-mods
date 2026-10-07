@@ -52,6 +52,7 @@ namespace RuneUI
         internal static ConfigEntry<float> KeyHintsSpacing;
         internal static ConfigEntry<bool> MoveHotbar;
         internal static ConfigEntry<bool> StyleHotbar;
+        internal static ConfigEntry<bool> ShowEmptySlots;
         internal static ConfigEntry<HudAnchor> HotbarAnchor;
         internal static ConfigEntry<float> HotbarOffsetX;
         internal static ConfigEntry<float> HotbarOffsetY;
@@ -176,6 +177,9 @@ namespace RuneUI
                 "Move the vanilla hotbar to the position below.");
             StyleHotbar = Config.Bind("5 - HUD layout", "Style hotbar", true,
                 "Draw hotbar and quick bar slots in the theme colours.");
+            ShowEmptySlots = Config.Bind("5 - HUD layout", "Show empty hotbar slots", true,
+                "Always show all eight hotbar slots, like the quick bar. Vanilla only shows them up to the last " +
+                "item, and none after a death empties your inventory.");
             HotbarAnchor = Config.Bind("5 - HUD layout", "Hotbar anchor", HudAnchor.Bottom,
                 "Screen point the hotbar is placed relative to.");
             HotbarOffsetX = BindOffset("5 - HUD layout", "Hotbar offset X", 0f, "Horizontal offset from the anchor.");

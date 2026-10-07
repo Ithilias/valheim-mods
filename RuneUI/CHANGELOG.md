@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.2.1
+- The hotbar no longer disappears after you die. All eight slots now always show, empty ones included, like the quick bar. Turn this off with Show empty hotbar slots.
+
 ## 0.2.0
 - New setting Hotbar scale makes the hotbar and quick bar smaller or larger without changing the rest of the HUD. They stay centred on the hotbar anchor.
 
