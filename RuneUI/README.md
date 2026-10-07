@@ -17,19 +17,21 @@ restyled in later versions.
 - **Second quick bar.** Your second inventory row is shown as another hotbar under the first, with
   Alt shown once on its left. Hold Left Alt and press 1 to 8 to use its items. While Alt is held, 1
   to 8 do not use the normal hotbar.
-- **Food slots.** Three extra slots that only take food, shown right of the quick bar and below your
-  inventory, or right of it while a chest is open. Drag food into them in the inventory and eat it with Z, V and B (Z can be switched to Y
-  for keyboards with Y and Z swapped). Food in them counts toward your weight. V is also vanilla's
-  key for toggling auto pickup, so rebind that in the game's controls.
+- **Quick slots.** Up to six extra slots for any item but ammo, shown right of the quick bar and below
+  your inventory, or right of it while a chest is open. Each has its own key, Z, V and B for the
+  first three, and you can change the keys and labels. A key uses its item: eats food, drinks a mead,
+  or equips a weapon or tool. While you use one, vanilla actions on the same key, such as V for auto
+  pickup, do not trigger. Items in them count toward your weight, and workbenches repair and upgrade
+  them there. They are not used as crafting or building material.
 - **Gear slots.** Six slots for worn armour right of the inventory: head, chest, legs, cape, utility and
   trinket. An empty slot shows a faint icon of what goes there. What is in them is worn, so armour no
   longer takes up inventory space.
   Put armour on in any way and it moves into its slot; drag it out or right click it and it comes off.
   Workbenches repair and upgrade it in the slots, and it counts toward your weight. While you hold an
-  item, the food and gear slots it fits in light up.
-- **Back in place after death.** Food and gear slots go into your tombstone with everything else.
-  When you pick your things up again, food goes back into its slot and everything you wore is put on
-  again, as long as you have not put something else in that place meanwhile.
+  item, the quick and gear slots it fits in light up.
+- **Back in place after death.** Quick and gear slots go into your tombstone with everything else.
+  When you pick your things up again, items go back into their quick slot and everything you wore is
+  put on again, as long as you have not put something else in that place meanwhile.
 - **Buffs in one place.** Eaten food and status effects such as Rested or Wet are shown together as
   hotbar sized icons in the bottom left, filling rows upwards. Rested and Resting show your comfort
   level in the corner. Like vanilla, a food icon pulses when
@@ -41,7 +43,7 @@ restyled in later versions.
   with the progress to the next level. Further gains of that skill update the same toast and keep it
   up; a level up flashes the name.
 - **Key hints in a column.** The key hints in the bottom right are stacked instead of running in a
-  long row into the food slots.
+  long row into the quick slots.
 - **Party list.** Players within 100 metres are listed in the top left with their health bar and
   numbers, closest first. The health bars floating over their heads are hidden; their names stay.
 - **Your theme.** Panel, border, text and bar colours, the font, corner roundness and border width
@@ -56,7 +58,7 @@ With a mod manager, just install it. Manually, drop `RuneUI.dll` into `BepInEx/p
 Client side only. It changes nothing that other players or the server can see, so it works on any
 server and nobody else needs it. The party list reads the health every client already receives.
 
-The food and gear slots are saved inside your character file. If you remove the mod, the items in them
+The quick and gear slots are saved inside your character file. If you remove the mod, the items in them
 stay in the save and are back when you install it again, so empty the slots first if you want to keep
 those items without the mod.
 
@@ -162,14 +164,16 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Offset Y | `-20` | Vertical offset |
 | Width | `220` | Width of each row, 120 to 500 |
 
-### 8 - Food slots
+### 8 - Quick slots
 
 | Setting | Default | What it does |
 | --- | --- | --- |
-| Enabled | `true` | Show the three food slots. Off only hides them; food already in them is kept |
-| First key | `Z` | Key for the first slot, next to V and B. Pick `Y` if your keyboard has Y and Z swapped |
-| Inventory offset X | `0` | Horizontal position of the food slots under the inventory. With a chest open they sit right of the inventory instead |
-| Inventory offset Y | `-12` | Vertical position of the food slots under the inventory. With a chest open they sit right of the inventory instead |
+| Enabled | `true` | Show the quick slots. Off only hides them; items already in them are kept |
+| Slot count | `3` | Number of quick slots, 0 to 6. Items in slots you remove move to your inventory |
+| Slot 1 key to Slot 6 key | `Z`, `V`, `B`, none, none, none | Key that uses the item in that slot, with modifiers if you like, such as `LeftAlt + Z`. While it is held with an item in the slot, vanilla actions on the same key do not trigger |
+| Slot 1 label to Slot 6 label | empty | Text shown on the slot. Empty shows its key |
+| Inventory offset X | `0` | Horizontal position of the quick slots under the inventory. With a chest open they sit right of the inventory instead |
+| Inventory offset Y | `-12` | Vertical position of the quick slots under the inventory. With a chest open they sit right of the inventory instead |
 
 ### 9 - Skill toasts
 

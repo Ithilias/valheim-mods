@@ -79,10 +79,12 @@ namespace RuneUI
         internal static ConfigEntry<float> PartyOffsetY;
         internal static ConfigEntry<float> PartyWidth;
 
-        internal static ConfigEntry<bool> FoodSlotsEnabled;
-        internal static ConfigEntry<FirstFoodKey> FoodFirstKey;
-        internal static ConfigEntry<float> FoodInventoryOffsetX;
-        internal static ConfigEntry<float> FoodInventoryOffsetY;
+        internal static ConfigEntry<bool> QuickSlotsEnabled;
+        internal static ConfigEntry<int> QuickSlotCount;
+        internal static readonly ConfigEntry<KeyboardShortcut>[] QuickSlotKeys = new ConfigEntry<KeyboardShortcut>[QuickSlots.MaxSize];
+        internal static readonly ConfigEntry<string>[] QuickSlotLabels = new ConfigEntry<string>[QuickSlots.MaxSize];
+        internal static ConfigEntry<float> QuickInventoryOffsetX;
+        internal static ConfigEntry<float> QuickInventoryOffsetY;
 
         internal static ConfigEntry<bool> GearSlotsEnabled;
 
@@ -228,14 +230,24 @@ namespace RuneUI
             PartyWidth = Config.Bind("7 - Party list", "Width", 220f,
                 new ConfigDescription("Width of each row.", new AcceptableValueRange<float>(120f, 500f)));
 
-            FoodSlotsEnabled = Config.Bind("8 - Food slots", "Enabled", true,
-                "Three extra slots for food, shown right of the quick bar and below your inventory. Food in them " +
-                "counts toward your weight and goes into your tombstone when you die. Turning this off only hides " +
-                "the slots; food already in them is kept.");
-            FoodFirstKey = Config.Bind("8 - Food slots", "First key", FirstFoodKey.Z,
-                "Key for the first food slot, next to V and B for the other two. Pick Y if your keyboard has Y and Z swapped.");
-            FoodInventoryOffsetX = BindOffset("8 - Food slots", "Inventory offset X", 0f, "Horizontal position of the food slots under the inventory. With a chest open they sit right of the inventory instead.");
-            FoodInventoryOffsetY = BindOffset("8 - Food slots", "Inventory offset Y", -12f, "Vertical position of the food slots under the inventory. With a chest open they sit right of the inventory instead.");
+            QuickSlotsEnabled = Config.Bind("8 - Quick slots", "Enabled", true,
+                "Extra slots for any item but ammo, each used with its own key, shown right of the quick bar and " +
+                "below your inventory. Items in them count toward your weight; weapons and tools in them can be " +
+                "equipped. Turning this off only hides the slots; items already in them are kept.");
+            QuickSlotCount = Config.Bind("8 - Quick slots", "Slot count", 3,
+                new ConfigDescription("Number of quick slots. Items in slots you remove move to your inventory.",
+                    new AcceptableValueRange<int>(0, QuickSlots.MaxSize)));
+            KeyCode[] defaultKeys = { KeyCode.Z, KeyCode.V, KeyCode.B, KeyCode.None, KeyCode.None, KeyCode.None };
+            for (int i = 0; i < QuickSlots.MaxSize; i++)
+            {
+                QuickSlotKeys[i] = Config.Bind("8 - Quick slots", $"Slot {i + 1} key", new KeyboardShortcut(defaultKeys[i]),
+                    $"Key that uses the item in quick slot {i + 1}. While it is held with an item in the slot, " +
+                    "vanilla actions on the same key do not trigger.");
+                QuickSlotLabels[i] = Config.Bind("8 - Quick slots", $"Slot {i + 1} label", "",
+                    $"Text shown on quick slot {i + 1}. Empty shows its key.");
+            }
+            QuickInventoryOffsetX = BindOffset("8 - Quick slots", "Inventory offset X", 0f, "Horizontal position of the quick slots under the inventory. With a chest open they sit right of the inventory instead.");
+            QuickInventoryOffsetY = BindOffset("8 - Quick slots", "Inventory offset Y", -12f, "Vertical position of the quick slots under the inventory. With a chest open they sit right of the inventory instead.");
 
             GearSlotsEnabled = Config.Bind("10 - Gear slots", "Enabled", true,
                 "Six slots for worn armour (head, chest, legs, cape, utility and trinket), shown right of the " +

@@ -1,7 +1,7 @@
 {
   "name": "RuneUI",
-  "version_number": "0.3.1",
+  "version_number": "0.4.0",
   "website_url": "https://github.com/Ithilias/valheim-mods",
-  "description": "A new HUD: themed bars and hotbars at the bottom centre, a second quick bar, food and gear slots, quality rings and a party list.",
+  "description": "A new HUD: themed bars and hotbars at the bottom centre, a second quick bar, quick and gear slots, quality rings and a party list.",
   "dependencies": [ "denikson-BepInExPack_Valheim-5.4.2350" ]
 }

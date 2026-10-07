@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace RuneUI
@@ -23,8 +24,12 @@ namespace RuneUI
         /// <summary>Runs after the items were read for a player.</summary>
         public Action<Player, Inventory> Loaded;
 
+        /// <summary>Every one of these inventories, for hooks that treat them all as the player's.</summary>
+        public static readonly List<SavedInventory> All = new List<SavedInventory>();
+
         public SavedInventory(string name, string label, string saveKey, int size)
         {
+            All.Add(this);
             _name = name;
             _label = label;
             _saveKey = saveKey;
@@ -87,6 +92,26 @@ namespace RuneUI
         /// <summary>Inventory.GetTotalWeight postfix: the items weigh on the player like the inventory does.</summary>
         public float ExtraWeight(Inventory inventory) =>
             _inventory != null && IsOwnersInventory(inventory) ? _inventory.GetTotalWeight() : 0f;
+
+        /// <summary>
+        /// The inventory of these that holds <paramref name="item"/> for the player owning
+        /// <paramref name="playerInventory"/>, or null.
+        /// </summary>
+        public static Inventory Holding(Inventory playerInventory, ItemDrop.ItemData item)
+        {
+            foreach (var store in All)
+                if (store._inventory != null && store.IsOwnersInventory(playerInventory) && store._inventory.ContainsItem(item))
+                    return store._inventory;
+            return null;
+        }
+
+        /// <summary>This player's inventories of these, as they are.</summary>
+        public static IEnumerable<Inventory> OwnedBy(Inventory playerInventory)
+        {
+            foreach (var store in All)
+                if (store._inventory != null && store.IsOwnersInventory(playerInventory))
+                    yield return store._inventory;
+        }
 
         /// <summary>
         /// Moves <paramref name="item"/> between inventories as the same object, unlike vanilla's

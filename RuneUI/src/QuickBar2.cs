@@ -8,7 +8,7 @@ namespace RuneUI
 {
     /// <summary>
     /// A second hotbar showing inventory row 2, used with the modifier key plus 1 to 8, with the
-    /// modifier shown once on its left. The food slots extend it on the right.
+    /// modifier shown once on its left. The quick slots extend it on the right.
     /// </summary>
     internal static class QuickBar2
     {
@@ -20,10 +20,10 @@ namespace RuneUI
 
         private static RectTransform _root;
         private static readonly HotbarSlot[] Slots = new HotbarSlot[Hotbar.SlotCount];
-        private static readonly HotbarSlot[] FoodSlots = new HotbarSlot[FoodPouch.Size];
+        private static readonly HotbarSlot[] ExtraSlots = new HotbarSlot[QuickSlots.MaxSize];
         private static TMP_Text _modifierLabel;
         private static int _version = -1;
-        private static bool _builtWithFood;
+        private static int _builtWithSlots;
 
         public static bool ModifierHeld =>
             Plugin.ModEnabled.Value && Plugin.QuickBarEnabled.Value && ZInput.GetKey(Plugin.QuickBarModifier.Value, false);
@@ -41,7 +41,7 @@ namespace RuneUI
             }
             var bar = Hotbar.Find(hud);
             if (bar == null) return;
-            if (_root == null || _version != Theme.Version || _builtWithFood != Plugin.FoodSlotsEnabled.Value)
+            if (_root == null || _version != Theme.Version || _builtWithSlots != QuickSlots.Count)
                 Build(bar);
 
             if (Hotbar.Stacking && Hotbar.TryEdges(_root.parent, out float hotbarBottom, out _))
@@ -66,13 +66,13 @@ namespace RuneUI
             Inventory inventory = player.GetInventory();
             for (int x = 0; x < Hotbar.SlotCount; x++) Slots[x].Fill(inventory.GetItemAt(x, Row), player);
 
-            if (_builtWithFood)
+            if (_builtWithSlots > 0)
             {
-                Inventory pouch = FoodPouch.Get();
-                for (int i = 0; i < FoodPouch.Size; i++)
+                Inventory quick = QuickSlots.Get();
+                for (int i = 0; i < _builtWithSlots; i++)
                 {
-                    FoodSlots[i].SetBinding(FoodPouch.KeyLabel(i));
-                    FoodSlots[i].Fill(pouch?.GetItemAt(i, 0), player);
+                    ExtraSlots[i].SetBinding(QuickSlots.KeyLabel(i));
+                    ExtraSlots[i].Fill(quick?.GetItemAt(i, 0), player);
                 }
             }
         }
@@ -93,7 +93,7 @@ namespace RuneUI
         {
             Remove();
             _version = Theme.Version;
-            _builtWithFood = Plugin.FoodSlotsEnabled.Value;
+            _builtWithSlots = QuickSlots.Count;
             Hotbar.SlotGeometry(bar, out Vector2 size, out Vector2 pivot, out float span);
             _root = Theme.NewRect("RuneUI_QuickBar", bar.transform.parent);
             _root.SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, span);
@@ -109,14 +109,11 @@ namespace RuneUI
                 Slots[x].SetBinding((x + 1).ToString());
             }
 
-            if (_builtWithFood)
+            var extraOrigin = origin + new Vector2(ExtensionGap, 0f);
+            for (int i = 0; i < _builtWithSlots; i++)
             {
-                var foodOrigin = origin + new Vector2(ExtensionGap, 0f);
-                for (int i = 0; i < FoodPouch.Size; i++)
-                {
-                    FoodSlots[i] = new HotbarSlot(bar, _root, "FoodSlot" + i);
-                    FoodSlots[i].PlaceAt(bar, Hotbar.SlotCount + i, foodOrigin);
-                }
+                ExtraSlots[i] = new HotbarSlot(bar, _root, "QuickSlot" + (Hotbar.SlotCount + i));
+                ExtraSlots[i].PlaceAt(bar, Hotbar.SlotCount + i, extraOrigin);
             }
 
             _modifierLabel = Theme.NewText("Modifier", _root, 18f, TextAlignmentOptions.Right);
@@ -160,7 +157,7 @@ namespace RuneUI
             _root = null;
             _modifierLabel = null;
             Array.Clear(Slots, 0, Slots.Length);
-            Array.Clear(FoodSlots, 0, FoodSlots.Length);
+            Array.Clear(ExtraSlots, 0, ExtraSlots.Length);
         }
     }
 }

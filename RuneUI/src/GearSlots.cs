@@ -22,9 +22,6 @@ namespace RuneUI
         private static readonly Sprite[] Placeholders = new Sprite[Size];
         private static ObjectDB _placeholderDb;
 
-        private static readonly AccessTools.FieldRef<InventoryGui, ItemDrop.ItemData> CraftUpgradeItem =
-            AccessTools.FieldRefAccess<InventoryGui, ItemDrop.ItemData>("m_craftUpgradeItem");
-
         // While above zero, equipping and unequipping do not move items in or out of the slots: vanilla
         // or this mod is moving them itself.
         private static int _busy;
@@ -125,14 +122,6 @@ namespace RuneUI
                 if (item.m_equipped) MoveIn(player, item);
         }
 
-        /// <summary>
-        /// Humanoid.EquipItem transpiler target, replacing its "is the item in my inventory" check so
-        /// items in the slots can be worn.
-        /// </summary>
-        public static bool HoldsForEquip(Inventory inventory, ItemDrop.ItemData item) =>
-            inventory.ContainsItem(item) ||
-            (Store.IsOwnersInventory(inventory) && Store.Current != null && Store.Current.ContainsItem(item));
-
         /// <summary>Humanoid.EquipItem postfix: armour put on from the inventory moves into its slot.</summary>
         public static void AfterEquip(Humanoid who, ItemDrop.ItemData item, bool equipped)
         {
@@ -149,12 +138,19 @@ namespace RuneUI
             if (SavedInventory.FindEmpty(main, out Vector2i pos)) SavedInventory.Move(gear, main, item, pos);
         }
 
-        private static void MoveIn(Player player, ItemDrop.ItemData item)
+        /// <summary>Moves worn armour from the inventory or a quick slot into its gear slot.</summary>
+        public static void MoveIn(Player player, ItemDrop.ItemData item)
         {
             int slot = SlotFor(item);
             Inventory gear = ReferenceEquals(player, Store.Owner) ? Store.Current : Store.Get();
             Inventory main = player.GetInventory();
-            if (slot < 0 || gear == null || !main.ContainsItem(item)) return;
+            if (slot < 0 || gear == null) return;
+            // The swap below puts what was in the slot where the item came from.
+            if (!main.ContainsItem(item))
+            {
+                main = SavedInventory.Holding(player.GetInventory(), item);
+                if (main == null || main == gear) return;
+            }
 
             Suspend();
             try
@@ -204,103 +200,6 @@ namespace RuneUI
         private static void Wear(Player player, ItemDrop.ItemData item)
         {
             if (item != null && !item.m_equipped) player.EquipItem(item);
-        }
-
-        /// <summary>Set while vanilla loads a character, which re-equips what GetEquippedItems lists.</summary>
-        public static bool Loading;
-
-        /// <summary>
-        /// Inventory.GetEquippedItems postfix: other mods, such as Epic Loot, find worn gear through it,
-        /// so gear worn from the slots is listed as part of the player's inventory.
-        /// </summary>
-        public static void AddEquipped(Inventory inventory, List<ItemDrop.ItemData> items)
-        {
-            if (Loading || Store.Current == null || !Store.IsOwnersInventory(inventory)) return;
-            foreach (var item in Store.Current.GetAllItems())
-                if (item.m_equipped && !items.Contains(item)) items.Add(item);
-        }
-
-        /// <summary>Inventory.GetWornItems postfix: workbenches repair the slots too.</summary>
-        public static void AddWorn(Inventory inventory, List<ItemDrop.ItemData> worn)
-        {
-            if (Store.Current != null && Store.IsOwnersInventory(inventory)) Store.Current.GetWornItems(worn);
-        }
-
-        /// <summary>Inventory.GetAllItems(name) postfix: the upgrade list at workbenches shows the slots too.</summary>
-        public static void AddNamed(Inventory inventory, string name, List<ItemDrop.ItemData> items)
-        {
-            if (Store.Current != null && Store.IsOwnersInventory(inventory)) Store.Current.GetAllItems(name, items);
-        }
-
-        /// <summary>What <see cref="BeforeCraft"/> moved, for <see cref="AfterCraft"/> to put back.</summary>
-        public struct CraftState
-        {
-            public ItemDrop.ItemData Item;
-            public int Slot;
-            public Vector2i Pos;
-            public int Height;
-        }
-
-        /// <summary>
-        /// InventoryGui.DoCrafting prefix. Vanilla upgrades an item only in the player inventory, so
-        /// move one being upgraded there for the craft, into an extra row if the inventory is full.
-        /// </summary>
-        public static CraftState BeforeCraft(InventoryGui gui, Player player)
-        {
-            var state = new CraftState { Slot = -1 };
-            ItemDrop.ItemData item = CraftUpgradeItem(gui);
-            Inventory gear = Store.Current;
-            if (item == null || gear == null || !gear.ContainsItem(item) || !Store.IsOwnersInventory(player.GetInventory()))
-                return state;
-
-            Inventory main = player.GetInventory();
-            state.Height = main.GetHeight();
-            if (!SavedInventory.FindEmpty(main, out Vector2i pos))
-            {
-                main.SetHeight(state.Height + 1);
-                pos = new Vector2i(0, state.Height);
-            }
-            Suspend();
-            try
-            {
-                if (!SavedInventory.Move(gear, main, item, pos))
-                {
-                    if (main.GetHeight() != state.Height) main.SetHeight(state.Height);
-                    return state;
-                }
-            }
-            finally
-            {
-                Resume();
-            }
-            state.Item = item;
-            state.Slot = SlotFor(item);
-            state.Pos = pos;
-            return state;
-        }
-
-        /// <summary>InventoryGui.DoCrafting postfix: wear the upgraded item, or put back the one that was not.</summary>
-        public static void AfterCraft(Player player, CraftState state)
-        {
-            if (state.Slot < 0) return;
-            Inventory main = player.GetInventory();
-            Inventory gear = Store.Current;
-            ItemDrop.ItemData result = main.GetItemAt(state.Pos.x, state.Pos.y);
-            if (result != null && gear != null && SlotFor(result) == state.Slot)
-            {
-                Suspend();
-                try
-                {
-                    SavedInventory.Move(main, gear, result, new Vector2i(state.Slot, 0));
-                }
-                finally
-                {
-                    Resume();
-                }
-                if (gear.ContainsItem(result) && !result.m_equipped) player.EquipItem(result, false);
-            }
-            if (main.GetHeight() > state.Height && !DeathKeeper.ShrinkTo(main, state.Height))
-                Plugin.Log.LogWarning("An upgraded item did not fit back; your inventory keeps an extra row until it is moved.");
         }
 
         public static void ResetState()

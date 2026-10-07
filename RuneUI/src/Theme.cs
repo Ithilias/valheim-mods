@@ -18,12 +18,6 @@ namespace RuneUI
         BottomRight,
     }
 
-    internal enum FirstFoodKey
-    {
-        Z,
-        Y,
-    }
-
     /// <summary>
     /// Shared look of everything this mod draws: generated sprites, font and the helpers that build
     /// themed objects. <see cref="Version"/> changes whenever a setting does, so features rebuild.

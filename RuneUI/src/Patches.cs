@@ -109,8 +109,8 @@ namespace RuneUI
         {
             if (!Plugin.ModEnabled.Value || !ReferenceEquals(__instance, Player.m_localPlayer)) return;
             if (!Failed.Contains("quick bar")) Guard("quick bar", () => QuickBar2.HandleInput(__instance));
-            if (!Failed.Contains("food slots") && QuickBar2.CanTakeInput(__instance))
-                Guard("food slots", () => FoodPouch.HandleInput(__instance));
+            if (!Failed.Contains("quick slots") && QuickBar2.CanTakeInput(__instance))
+                Guard("quick slots", () => QuickSlots.HandleInput(__instance));
             if (!Failed.Contains("slots after death")) Guard("slots after death", () => DeathKeeper.Update(__instance));
         }
 
@@ -118,6 +118,46 @@ namespace RuneUI
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), nameof(Player.UseHotbarItem))]
         private static bool UseHotbarItemPrefix() => Failed.Contains("quick bar") || !QuickBar2.ModifierHeld;
+
+        // Quick slot keys: vanilla actions on the same key stand down while one is used.
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetButtonDown))]
+        private static void ZInputGetButtonDownPostfix(string name, ref bool __result) => FilterButton(name, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetButton))]
+        private static void ZInputGetButtonPostfix(string name, ref bool __result) => FilterButton(name, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetButtonUp))]
+        private static void ZInputGetButtonUpPostfix(string name, ref bool __result) => FilterButton(name, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetKeyDown))]
+        private static void ZInputGetKeyDownPostfix(KeyCode key, ref bool __result) => FilterKey(key, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetKey))]
+        private static void ZInputGetKeyPostfix(KeyCode key, ref bool __result) => FilterKey(key, ref __result);
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(ZInput), nameof(ZInput.GetKeyUp))]
+        private static void ZInputGetKeyUpPostfix(KeyCode key, ref bool __result) => FilterKey(key, ref __result);
+
+        private static void FilterButton(string name, ref bool result)
+        {
+            if (!result || Failed.Contains("quick slot keys")) return;
+            try { QuickKeys.FilterButton(name, ref result); }
+            catch (Exception e) { Failed.Add("quick slot keys"); Plugin.Log.LogError($"Quick slot keys failed and stop blocking vanilla keys until restart: {e}"); }
+        }
+
+        private static void FilterKey(KeyCode key, ref bool result)
+        {
+            if (!result || Failed.Contains("quick slot keys")) return;
+            try { QuickKeys.FilterKey(key, ref result); }
+            catch (Exception e) { Failed.Add("quick slot keys"); Plugin.Log.LogError($"Quick slot keys failed and stop blocking vanilla keys until restart: {e}"); }
+        }
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(EnemyHud), "LateUpdate")]
@@ -220,18 +260,18 @@ namespace RuneUI
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(Player), nameof(Player.Load))]
-        private static void PlayerLoadPrefix() => GearSlots.Loading = true;
+        private static void PlayerLoadPrefix() => SlotInventories.Loading = true;
 
         [HarmonyFinalizer]
         [HarmonyPatch(typeof(Player), nameof(Player.Load))]
-        private static void PlayerLoadFinalizer() => GearSlots.Loading = false;
+        private static void PlayerLoadFinalizer() => SlotInventories.Loading = false;
 
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), nameof(Player.Load))]
         private static void PlayerLoadPostfix(Player __instance)
         {
-            try { FoodPouch.OnLoad(__instance); }
-            catch (Exception e) { Plugin.Log.LogError($"Loading the food slots failed: {e}"); }
+            try { QuickSlots.OnLoad(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Loading the quick slots failed: {e}"); }
             try { GearSlots.OnLoad(__instance); }
             catch (Exception e) { Plugin.Log.LogError($"Loading the gear slots failed: {e}"); }
         }
@@ -240,8 +280,8 @@ namespace RuneUI
         [HarmonyPatch(typeof(Player), nameof(Player.Save))]
         private static void PlayerSavePrefix(Player __instance)
         {
-            try { FoodPouch.OnSave(__instance); }
-            catch (Exception e) { Plugin.Log.LogError($"Saving the food slots failed: {e}"); }
+            try { QuickSlots.OnSave(__instance); }
+            catch (Exception e) { Plugin.Log.LogError($"Saving the quick slots failed: {e}"); }
             try { GearSlots.OnSave(__instance); }
             catch (Exception e) { Plugin.Log.LogError($"Saving the gear slots failed: {e}"); }
         }
@@ -250,7 +290,7 @@ namespace RuneUI
         [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetTotalWeight))]
         private static void InventoryGetTotalWeightPostfix(Inventory __instance, ref float __result)
         {
-            __result += FoodPouch.ExtraWeight(__instance) + GearSlots.ExtraWeight(__instance);
+            __result += QuickSlots.ExtraWeight(__instance) + GearSlots.ExtraWeight(__instance);
         }
 
         /// <summary>Vanilla only equips items in the wearer's inventory; let the gear slots count as theirs.</summary>
@@ -259,7 +299,7 @@ namespace RuneUI
         private static IEnumerable<CodeInstruction> EquipItemTranspiler(IEnumerable<CodeInstruction> instructions)
         {
             var contains = AccessTools.Method(typeof(Inventory), nameof(Inventory.ContainsItem));
-            var holds = AccessTools.Method(typeof(GearSlots), nameof(GearSlots.HoldsForEquip));
+            var holds = AccessTools.Method(typeof(SlotInventories), nameof(SlotInventories.HoldsForEquip));
             bool replaced = false;
             foreach (var instruction in instructions)
             {
@@ -271,7 +311,7 @@ namespace RuneUI
                 }
                 yield return instruction;
             }
-            if (!replaced) Plugin.Log.LogError("Could not find the inventory check in EquipItem; gear in the gear slots cannot be worn.");
+            if (!replaced) Plugin.Log.LogError("Could not find the inventory check in EquipItem; items in the quick and gear slots cannot be worn.");
         }
 
         [HarmonyPostfix]
@@ -294,7 +334,7 @@ namespace RuneUI
         [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetEquippedItems))]
         private static void InventoryGetEquippedItemsPostfix(Inventory __instance, List<ItemDrop.ItemData> __result)
         {
-            try { GearSlots.AddEquipped(__instance, __result); }
+            try { SlotInventories.AddEquipped(__instance, __result); }
             catch (Exception e) { Plugin.Log.LogError($"Listing worn gear failed: {e}"); }
         }
 
@@ -302,7 +342,7 @@ namespace RuneUI
         [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetWornItems))]
         private static void InventoryGetWornItemsPostfix(Inventory __instance, List<ItemDrop.ItemData> worn)
         {
-            try { GearSlots.AddWorn(__instance, worn); }
+            try { SlotInventories.AddWorn(__instance, worn); }
             catch (Exception e) { Plugin.Log.LogError($"Listing gear for repair failed: {e}"); }
         }
 
@@ -310,24 +350,24 @@ namespace RuneUI
         [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetAllItems), typeof(string), typeof(List<ItemDrop.ItemData>))]
         private static void InventoryGetAllItemsByNamePostfix(Inventory __instance, string name, List<ItemDrop.ItemData> items)
         {
-            try { GearSlots.AddNamed(__instance, name, items); }
+            try { SlotInventories.AddNamed(__instance, name, items); }
             catch (Exception e) { Plugin.Log.LogError($"Listing gear for upgrades failed: {e}"); }
         }
 
         [HarmonyPrefix]
         [HarmonyPatch(typeof(InventoryGui), "DoCrafting")]
-        private static void DoCraftingPrefix(InventoryGui __instance, Player player, out GearSlots.CraftState __state)
+        private static void DoCraftingPrefix(InventoryGui __instance, Player player, out SlotInventories.CraftState __state)
         {
-            __state = new GearSlots.CraftState { Slot = -1 };
-            try { __state = GearSlots.BeforeCraft(__instance, player); }
+            __state = default;
+            try { __state = SlotInventories.BeforeCraft(__instance, player); }
             catch (Exception e) { Plugin.Log.LogError($"Preparing gear for an upgrade failed: {e}"); }
         }
 
         [HarmonyFinalizer]
         [HarmonyPatch(typeof(InventoryGui), "DoCrafting")]
-        private static void DoCraftingFinalizer(Player player, GearSlots.CraftState __state)
+        private static void DoCraftingFinalizer(Player player, SlotInventories.CraftState __state)
         {
-            try { GearSlots.AfterCraft(player, __state); }
+            try { SlotInventories.AfterCraft(player, __state); }
             catch (Exception e) { Plugin.Log.LogError($"Putting upgraded gear back failed: {e}"); }
         }
 
@@ -336,7 +376,7 @@ namespace RuneUI
         private static void PlayerCreateTombStonePrefix(Player __instance)
         {
             try { DeathKeeper.BeforeTombstone(__instance); }
-            catch (Exception e) { Plugin.Log.LogError($"Moving the food and gear slots to the tombstone failed: {e}"); }
+            catch (Exception e) { Plugin.Log.LogError($"Moving the quick and gear slots to the tombstone failed: {e}"); }
         }
 
         [HarmonyFinalizer]

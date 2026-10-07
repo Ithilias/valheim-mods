@@ -8,7 +8,7 @@ using Object = UnityEngine.Object;
 namespace RuneUI
 {
     /// <summary>
-    /// The food and gear slots in the inventory screen: clones of the player's inventory grid bound to
+    /// The quick and gear slots in the inventory screen: clones of the player's inventory grid bound to
     /// those slots, so dragging, splitting, eating and tooltips all work through vanilla's own handlers.
     /// </summary>
     internal static class InventoryPanels
@@ -26,8 +26,8 @@ namespace RuneUI
         private static readonly AccessTools.FieldRef<InventoryGrid, List<InventoryElement>> Elements =
             AccessTools.FieldRefAccess<InventoryGrid, List<InventoryElement>>("m_elements");
 
-        private static readonly SlotPanel Food = new SlotPanel("RuneUI_FoodSlots", FoodPouch.Size);
-        private static readonly SlotPanel Gear = new SlotPanel("RuneUI_GearSlots", GearSlots.Size);
+        private static readonly SlotPanel Quick = new SlotPanel("RuneUI_QuickSlots");
+        private static readonly SlotPanel Gear = new SlotPanel("RuneUI_GearSlots");
         private static InventoryGui _gui;
 
         /// <summary>InventoryGui.UpdateInventory postfix, which runs while the inventory is open.</summary>
@@ -39,37 +39,37 @@ namespace RuneUI
                 _gui = gui;
             }
             bool on = Plugin.ModEnabled.Value && player != null;
-            Inventory pouch = on && Plugin.FoodSlotsEnabled.Value ? FoodPouch.Get() : null;
+            Inventory quick = on && QuickSlots.Count > 0 ? QuickSlots.Get() : null;
             Inventory gear = on && Plugin.GearSlotsEnabled.Value ? GearSlots.Get() : null;
 
             // Right of the inventory, one slot further out to clear the armour value at its right edge.
             var right = new Vector2(1f, 1f);
             var besideInventory = new Vector2(ChestGap + gui.m_playerGrid.m_elementSpace, 0f);
 
-            if (pouch != null)
+            if (quick != null)
             {
                 // Under the inventory, unless a chest is open: it opens below the inventory, so move right of it.
                 bool chestOpen = gui.m_container != null && gui.m_container.gameObject.activeInHierarchy;
-                if (chestOpen) Food.Update(gui, pouch, player, right, besideInventory, FoodPouch.KeyLabel, null);
-                else Food.Update(gui, pouch, player, Vector2.zero,
-                    new Vector2(Plugin.FoodInventoryOffsetX.Value, Plugin.FoodInventoryOffsetY.Value), FoodPouch.KeyLabel, null);
-                // The gear stays put under the spot the food takes beside the inventory.
-                besideInventory.y -= Food.Height + PanelGap;
+                if (chestOpen) Quick.Update(gui, quick, player, right, besideInventory, QuickSlots.KeyLabel, null);
+                else Quick.Update(gui, quick, player, Vector2.zero,
+                    new Vector2(Plugin.QuickInventoryOffsetX.Value, Plugin.QuickInventoryOffsetY.Value), QuickSlots.KeyLabel, null);
+                // The gear stays put under the spot the quick slots take beside the inventory.
+                besideInventory.y -= Quick.Height + PanelGap;
             }
             else
             {
-                Food.Remove();
+                Quick.Remove();
             }
             if (gear != null) Gear.Update(gui, gear, player, right, besideInventory, null, GearSlots.Placeholder);
             else Gear.Remove();
         }
 
-        private static bool Ours(Inventory inventory) => FoodPouch.Owns(inventory) || GearSlots.Owns(inventory);
+        private static bool Ours(Inventory inventory) => QuickSlots.Owns(inventory) || GearSlots.Owns(inventory);
 
         /// <summary>Whether <paramref name="item"/> may go to <paramref name="pos"/> in <paramref name="inventory"/>.</summary>
         private static bool Fits(Inventory inventory, Vector2i pos, ItemDrop.ItemData item)
         {
-            if (FoodPouch.Owns(inventory)) return FoodPouch.IsFood(item);
+            if (QuickSlots.Owns(inventory)) return QuickSlots.Fits(item);
             if (GearSlots.Owns(inventory)) return GearSlots.SlotFor(item) == pos.x;
             return true;
         }
@@ -127,14 +127,14 @@ namespace RuneUI
 
         public static void Remove()
         {
-            Food.Remove();
+            Quick.Remove();
             Gear.Remove();
         }
 
         public static void ResetState()
         {
             _gui = null;
-            Food.Forget();
+            Quick.Forget();
             Gear.Forget();
         }
 
@@ -142,15 +142,14 @@ namespace RuneUI
         private sealed class SlotPanel
         {
             private readonly string _name;
-            private readonly int _size;
+            private int _size;
             private RectTransform _panel;
             private InventoryGrid _grid;
             private int _version = -1;
 
-            public SlotPanel(string name, int size)
+            public SlotPanel(string name)
             {
                 _name = name;
-                _size = size;
             }
 
             public float Height => _panel != null ? _panel.sizeDelta.y : 0f;
@@ -160,7 +159,11 @@ namespace RuneUI
             public void Update(InventoryGui gui, Inventory inventory, Player player, Vector2 corner, Vector2 pos,
                 Func<int, string> label, Func<int, Sprite> placeholder)
             {
-                if (_grid == null || _version != Theme.Version) Build(gui);
+                if (_grid == null || _version != Theme.Version || _size != inventory.GetWidth())
+                {
+                    _size = inventory.GetWidth();
+                    Build(gui);
+                }
                 if (_panel.anchorMin != corner) _panel.anchorMin = _panel.anchorMax = corner;
                 if ((_panel.anchoredPosition - pos).sqrMagnitude > 0.01f) _panel.anchoredPosition = pos;
 

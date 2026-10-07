@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0
+- The food slots are now quick slots: they take any item but ammo, and their key uses it. Food is
+  eaten, meads are drunk, and weapons and tools are equipped. Food already in them stays.
+- Up to six quick slots, with a key and a label of your choice for each.
+- While a quick slot key is used, vanilla actions on the same key no longer trigger, so V eats
+  instead of also toggling auto pickup.
+- Workbenches repair and upgrade items in the quick slots too.
+
 ## 0.3.1
 - Gear in the gear slots now counts for other mods that look at what you wear, such as Epic Loot's
   magic effects and set bonuses.

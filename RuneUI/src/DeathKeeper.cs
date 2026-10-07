@@ -4,15 +4,16 @@ using UnityEngine;
 namespace RuneUI
 {
     /// <summary>
-    /// On death, puts the food and gear slots into the tombstone with the rest, and marks what was in
-    /// the food slots or worn. When the player picks those items up again, food goes back into its
-    /// slot and gear is worn again, as long as nothing has taken that place in the meantime.
+    /// On death, puts the quick and gear slots into the tombstone with the rest, and marks what was in
+    /// a quick slot or worn. When the player picks those items up again, they go back into their quick
+    /// slot and are worn again, as long as nothing has taken that place in the meantime.
     /// </summary>
     internal static class DeathKeeper
     {
-        // Item custom data: "food:<slot>:<player id>" or "equip::<player id>". Saved with the item, so
-        // it survives the tombstone being unloaded.
+        // Item custom data, saved with the item so it survives the tombstone being unloaded:
+        // "quick:<slot>:<player id>" for the quick slot an item was in, the player id for worn items.
         private const string Key = "ithilias.runeui.restore";
+        private const string EquipKey = "ithilias.runeui.equip";
 
         private static bool _dirty;
         private static Inventory _watched;
@@ -30,21 +31,24 @@ namespace RuneUI
             string id = player.GetPlayerID().ToString();
             if (!keepEquipped)
                 foreach (var item in main.GetAllItems())
-                    if (item.m_equipped) item.m_customData[Key] = "equip::" + id;
+                    if (item.m_equipped) item.m_customData[EquipKey] = id;
 
             var moving = new List<KeyValuePair<Inventory, ItemDrop.ItemData>>();
-            Inventory pouch = FoodPouch.Current;
-            if (pouch != null)
-                foreach (var item in pouch.GetAllItems())
+            Inventory quick = QuickSlots.Current;
+            if (quick != null)
+                foreach (var item in quick.GetAllItems())
                 {
-                    item.m_customData[Key] = "food:" + item.m_gridPos.x + ":" + id;
-                    moving.Add(new KeyValuePair<Inventory, ItemDrop.ItemData>(pouch, item));
+                    // Worn items stay with the player like vanilla's, when the world keeps equipment.
+                    if (keepEquipped && item.m_equipped) continue;
+                    item.m_customData[Key] = "quick:" + item.m_gridPos.x + ":" + id;
+                    if (item.m_equipped) item.m_customData[EquipKey] = id;
+                    moving.Add(new KeyValuePair<Inventory, ItemDrop.ItemData>(quick, item));
                 }
             Inventory gear = GearSlots.Current;
             if (gear != null && !keepEquipped)
                 foreach (var item in gear.GetAllItems())
                 {
-                    if (item.m_equipped) item.m_customData[Key] = "equip::" + id;
+                    if (item.m_equipped) item.m_customData[EquipKey] = id;
                     moving.Add(new KeyValuePair<Inventory, ItemDrop.ItemData>(gear, item));
                 }
             if (moving.Count == 0) return;
@@ -76,7 +80,11 @@ namespace RuneUI
         {
             if (!ReferenceEquals(player, Player.m_localPlayer)) return;
             Inventory main = player.GetInventory();
-            foreach (var item in main.GetAllItems()) item.m_customData.Remove(Key);
+            foreach (var item in main.GetAllItems())
+            {
+                item.m_customData.Remove(Key);
+                item.m_customData.Remove(EquipKey);
+            }
             if (_grownFrom >= 0 && !ShrinkTo(main, _grownFrom))
                 Plugin.Log.LogWarning("Items kept on death did not fit; your inventory keeps an extra row until they are moved.");
             _grownFrom = -1;
@@ -123,18 +131,24 @@ namespace RuneUI
             string id = player.GetPlayerID().ToString();
             foreach (var item in new List<ItemDrop.ItemData>(main.GetAllItems()))
             {
-                if (!item.m_customData.TryGetValue(Key, out string mark)) continue;
+                bool marked = item.m_customData.TryGetValue(Key, out string mark);
+                bool worn = item.m_customData.TryGetValue(EquipKey, out string wornBy);
+                if (!marked && !worn) continue;
                 item.m_customData.Remove(Key);
-                string[] parts = mark.Split(':');
-                if (parts.Length != 3 || parts[2] != id) continue;
+                item.m_customData.Remove(EquipKey);
 
-                if (parts[0] == "food" && int.TryParse(parts[1], out int slot))
+                Inventory from = main;
+                string[] parts = marked ? mark.Split(':') : new string[0];
+                // "food" is what the quick slots were called before.
+                if (parts.Length == 3 && parts[2] == id && (parts[0] == "quick" || parts[0] == "food")
+                    && int.TryParse(parts[1], out int slot))
                 {
-                    Inventory pouch = Plugin.FoodSlotsEnabled.Value ? FoodPouch.Get() : null;
-                    if (pouch != null && slot >= 0 && slot < FoodPouch.Size && pouch.GetItemAt(slot, 0) == null)
-                        SavedInventory.Move(main, pouch, item, new Vector2i(slot, 0));
+                    Inventory quick = QuickSlots.Get();
+                    if (quick != null && slot >= 0 && slot < QuickSlots.Count && quick.GetItemAt(slot, 0) == null
+                        && SavedInventory.Move(main, quick, item, new Vector2i(slot, 0)))
+                        from = quick;
                 }
-                else if (parts[0] == "equip" && !item.m_equipped && PlaceFree(player, item))
+                if (worn && wornBy == id && !item.m_equipped && from.ContainsItem(item) && PlaceFree(player, item))
                 {
                     // Armour then moves into its gear slot by itself.
                     player.EquipItem(item);
