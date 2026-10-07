@@ -90,6 +90,7 @@ namespace RuneUI
         internal static ConfigEntry<float> GearOffsetX;
         internal static ConfigEntry<float> GearOffsetY;
         internal static ConfigEntry<KeyboardShortcut> PanelDragKey;
+        internal static ConfigEntry<bool> ShowPaperdoll;
 
         internal static ConfigEntry<bool> GearSlotsEnabled;
 
@@ -271,6 +272,8 @@ namespace RuneUI
                 "it out and it comes off. Turning this off hides the slots; gear already in them stays worn.");
             GearOffsetX = BindOffset("10 - Gear slots", "Offset X", 0f, "Horizontal nudge of the gear slots from their spot right of the inventory.");
             GearOffsetY = BindOffset("10 - Gear slots", "Offset Y", 0f, "Vertical nudge of the gear slots from their spot right of the inventory.");
+            ShowPaperdoll = Config.Bind("10 - Gear slots", "Paperdoll", false,
+                "Lay the gear slots out over a body outline, head at the top and legs at the bottom, instead of a row.");
             PanelDragKey = Config.Bind("10 - Gear slots", "Drag key", new KeyboardShortcut(KeyCode.LeftAlt),
                 "Hold this in the inventory and drag the quick or gear slots with the left mouse button to move them. " +
                 "The position is saved to their offset settings. None turns dragging off.");
@@ -341,6 +344,7 @@ namespace RuneUI
         {
             _harmony?.UnpatchSelf();
             Theme.DestroySprites();
+            Paperdoll.Destroy();
         }
     }
 }

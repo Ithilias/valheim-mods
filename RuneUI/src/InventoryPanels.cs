@@ -68,6 +68,7 @@ namespace RuneUI
             {
                 Quick.Remove();
             }
+            Gear.Doll = Paperdoll.On;
             if (gear != null)
                 Gear.Update(gui, gear, player, right, besideInventory + Offset(Gear, Plugin.GearOffsetX, Plugin.GearOffsetY),
                     null, GearSlots.Placeholder);
@@ -209,6 +210,10 @@ namespace RuneUI
             private RectTransform _panel;
             private InventoryGrid _grid;
             private int _version = -1;
+            private bool _builtDoll;
+
+            /// <summary>Lay the cells out as a <see cref="Paperdoll"/> instead of a row.</summary>
+            public bool Doll;
 
             public SlotPanel(string name)
             {
@@ -226,7 +231,7 @@ namespace RuneUI
             public void Update(InventoryGui gui, Inventory inventory, Player player, Vector2 corner, Vector2 pos,
                 Func<int, string> label, Func<int, Sprite> placeholder)
             {
-                if (_grid == null || _version != Theme.Version || _size != inventory.GetWidth())
+                if (_grid == null || _version != Theme.Version || _size != inventory.GetWidth() || _builtDoll != Doll)
                 {
                     _size = inventory.GetWidth();
                     Build(gui);
@@ -237,6 +242,7 @@ namespace RuneUI
                 ItemDrop.ItemData dragged = DragItem(gui);
                 _grid.UpdateInventory(inventory, player, dragged);
                 var elements = Elements(_grid);
+                if (_builtDoll) PlaceDollCells(elements, gui.m_playerGrid.m_elementSpace);
                 for (int i = 0; i < elements.Count && i < _size; i++)
                 {
                     Transform slot = elements[i].transform;
@@ -255,6 +261,23 @@ namespace RuneUI
                     // Every slot the item in hand may go into lights up while it is held.
                     bool fits = dragged != null && Fits(inventory, new Vector2i(i, 0), dragged);
                     Child(slot, HighlightName, fits, BuildHighlight);
+                }
+            }
+
+            /// <summary>
+            /// Moves each cell's centre onto its paperdoll spot. Done by measured position, so it does
+            /// not depend on how vanilla anchors the cells in the grid.
+            /// </summary>
+            private void PlaceDollCells(List<InventoryElement> elements, float space)
+            {
+                for (int i = 0; i < elements.Count; i++)
+                {
+                    Vector2Int cell = Paperdoll.CellOf(i);
+                    var target = _panel.TransformPoint(new Vector3(Padding + (cell.x + 0.5f) * space,
+                        -(Padding + (cell.y + 0.5f) * space), 0f));
+                    var rt = (RectTransform)elements[i].transform;
+                    Vector3 current = rt.TransformPoint(rt.rect.center);
+                    if ((target - current).sqrMagnitude > 0.01f) rt.position += target - current;
                 }
             }
 
@@ -308,7 +331,22 @@ namespace RuneUI
                 _panel = Theme.NewPanel(_name, gui.m_player).rectTransform;
                 _panel.anchorMin = _panel.anchorMax = Vector2.zero;
                 _panel.pivot = new Vector2(0f, 1f);
-                _panel.sizeDelta = new Vector2(_size * space + Padding * 2f, space + Padding * 2f);
+                _builtDoll = Doll;
+                _panel.sizeDelta = _builtDoll
+                    ? new Vector2(Paperdoll.Columns * space + Padding * 2f, Paperdoll.Rows * space + Padding * 2f)
+                    : new Vector2(_size * space + Padding * 2f, space + Padding * 2f);
+                if (_builtDoll)
+                {
+                    var outline = Theme.NewRect("RuneUI_Outline", _panel);
+                    Theme.Stretch(outline, Padding);
+                    var img = outline.gameObject.AddComponent<Image>();
+                    img.sprite = Paperdoll.Outline;
+                    img.preserveAspect = true;
+                    img.raycastTarget = false;
+                    Color tint = Plugin.BorderColor.Value;
+                    tint.a *= 0.3f;
+                    img.color = tint;
+                }
 
                 var go = Object.Instantiate(source.gameObject, _panel);
                 go.name = "Grid";

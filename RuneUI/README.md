@@ -24,7 +24,8 @@ restyled in later versions.
   pickup, do not trigger. Items in them count toward your weight, and workbenches repair and upgrade
   them there. They are not used as crafting or building material.
 - **Gear slots.** Six slots for worn armour right of the inventory: head, chest, legs, cape, utility and
-  trinket. An empty slot shows a faint icon of what goes there. What is in them is worn, so armour no
+  trinket, in a row or laid out over a body outline. An empty slot shows a faint icon of what goes
+  there. What is in them is worn, so armour no
   longer takes up inventory space.
   Put armour on in any way and it moves into its slot; drag it out or right click it and it comes off.
   Workbenches repair and upgrade it in the slots, and it counts toward your weight. While you hold an
@@ -217,6 +218,7 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Enabled | `true` | Show the six gear slots right of the inventory. What is in them is worn. Off only hides them; gear already in them stays worn |
 | Offset X | `0` | Horizontal nudge of the gear slots from their spot right of the inventory |
 | Offset Y | `0` | Vertical nudge of the gear slots from their spot right of the inventory |
+| Paperdoll | `false` | Lay the gear slots out over a body outline, head at the top and legs at the bottom, instead of a row |
 | Drag key | `LeftAlt` | Hold this in the inventory and drag the quick or gear slots with the left mouse button to move them. The position is saved to their offset settings. `None` turns dragging off |
 
 ### 11 - Death

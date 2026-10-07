@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.0
+- New Paperdoll setting: the gear slots sit on a body outline, head at the top and legs at the
+  bottom, instead of in a row.
+
 ## 0.8.0
 - Move the quick and gear slots in the inventory: hold Left Alt and drag them. Their position is also
   in the settings, separately for the quick slots with a chest open.
