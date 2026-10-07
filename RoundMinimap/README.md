@@ -85,7 +85,7 @@ Round map only.
 | Border thickness | `3` | Rim over the circle's edge. `0` for none |
 | Border shadow | `5` | Soft shadow fading outwards. `0` for none |
 | Border shadow strength | `0.5` | |
-| Border color | dark | |
+| Border color | dark | Colour and opacity of the rim and shadow. Left at the default colour, it follows the vanilla map frame, so mods that recolour it (e.g. Seasons) carry over |
 
 ### 4 - Layout
 
