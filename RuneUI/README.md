@@ -28,7 +28,7 @@ restyled in later versions.
   longer takes up inventory space.
   Put armour on in any way and it moves into its slot; drag it out or right click it and it comes off.
   Workbenches repair and upgrade it in the slots, and it counts toward your weight. While you hold an
-  item, the quick and gear slots it fits in light up.
+  item, the quick and gear slots it fits in light up. Hold Left Alt and drag either row to move it.
 - **Balance options.** Off by default: wear up to three utility items at once, add inventory rows, and
   change the base carry weight.
 - **Back in place after death.** Quick and gear slots go into your tombstone with everything else.
@@ -196,6 +196,8 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Slot 1 label to Slot 6 label | empty | Text shown on the slot. Empty shows its key |
 | Inventory offset X | `0` | Horizontal position of the quick slots under the inventory. With a chest open they sit right of the inventory instead |
 | Inventory offset Y | `-12` | Vertical position of the quick slots under the inventory. With a chest open they sit right of the inventory instead |
+| Chest offset X | `0` | Horizontal nudge of the quick slots from their spot right of the inventory while a chest is open |
+| Chest offset Y | `0` | Vertical nudge of the quick slots from their spot right of the inventory while a chest is open |
 
 ### 9 - Skill toasts
 
@@ -213,6 +215,9 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Setting | Default | What it does |
 | --- | --- | --- |
 | Enabled | `true` | Show the six gear slots right of the inventory. What is in them is worn. Off only hides them; gear already in them stays worn |
+| Offset X | `0` | Horizontal nudge of the gear slots from their spot right of the inventory |
+| Offset Y | `0` | Vertical nudge of the gear slots from their spot right of the inventory |
+| Drag key | `LeftAlt` | Hold this in the inventory and drag the quick or gear slots with the left mouse button to move them. The position is saved to their offset settings. `None` turns dragging off |
 
 ### 11 - Death
 

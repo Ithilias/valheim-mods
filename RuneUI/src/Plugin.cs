@@ -85,6 +85,11 @@ namespace RuneUI
         internal static readonly ConfigEntry<string>[] QuickSlotLabels = new ConfigEntry<string>[QuickSlots.MaxSize];
         internal static ConfigEntry<float> QuickInventoryOffsetX;
         internal static ConfigEntry<float> QuickInventoryOffsetY;
+        internal static ConfigEntry<float> QuickChestOffsetX;
+        internal static ConfigEntry<float> QuickChestOffsetY;
+        internal static ConfigEntry<float> GearOffsetX;
+        internal static ConfigEntry<float> GearOffsetY;
+        internal static ConfigEntry<KeyboardShortcut> PanelDragKey;
 
         internal static ConfigEntry<bool> GearSlotsEnabled;
 
@@ -257,11 +262,18 @@ namespace RuneUI
             }
             QuickInventoryOffsetX = BindOffset("8 - Quick slots", "Inventory offset X", 0f, "Horizontal position of the quick slots under the inventory. With a chest open they sit right of the inventory instead.");
             QuickInventoryOffsetY = BindOffset("8 - Quick slots", "Inventory offset Y", -12f, "Vertical position of the quick slots under the inventory. With a chest open they sit right of the inventory instead.");
+            QuickChestOffsetX = BindOffset("8 - Quick slots", "Chest offset X", 0f, "Horizontal nudge of the quick slots from their spot right of the inventory while a chest is open.");
+            QuickChestOffsetY = BindOffset("8 - Quick slots", "Chest offset Y", 0f, "Vertical nudge of the quick slots from their spot right of the inventory while a chest is open.");
 
             GearSlotsEnabled = Config.Bind("10 - Gear slots", "Enabled", true,
                 "Six slots for worn armour (head, chest, legs, cape, utility and trinket), shown right of the " +
                 "inventory. What is in them is worn: put armour on and it moves into its slot, take " +
                 "it out and it comes off. Turning this off hides the slots; gear already in them stays worn.");
+            GearOffsetX = BindOffset("10 - Gear slots", "Offset X", 0f, "Horizontal nudge of the gear slots from their spot right of the inventory.");
+            GearOffsetY = BindOffset("10 - Gear slots", "Offset Y", 0f, "Vertical nudge of the gear slots from their spot right of the inventory.");
+            PanelDragKey = Config.Bind("10 - Gear slots", "Drag key", new KeyboardShortcut(KeyCode.LeftAlt),
+                "Hold this in the inventory and drag the quick or gear slots with the left mouse button to move them. " +
+                "The position is saved to their offset settings. None turns dragging off.");
 
             KeepGearOnDeath = Config.Bind("11 - Death", "Keep gear", false,
                 "Gear in the gear slots stays with you when you die instead of going into the tombstone, and you " +

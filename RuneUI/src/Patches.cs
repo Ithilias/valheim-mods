@@ -211,6 +211,7 @@ namespace RuneUI
             // Not gated on any setting: items already in the slots must stay consistent.
             try
             {
+                if (InventoryPanels.Dragging(grid)) return false;
                 __state.Allowed = InventoryPanels.AllowSelect(__instance, grid, item, pos, mod,
                     out __state.DragFrom, out __state.Dragged);
                 if (__state.Dragged != null) __state.DragPos = __state.Dragged.m_gridPos;

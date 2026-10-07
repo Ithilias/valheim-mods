@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+- Move the quick and gear slots in the inventory: hold Left Alt and drag them. Their position is also
+  in the settings, separately for the quick slots with a chest open.
+
 ## 0.7.0
 - New balance settings, all off by default: wear up to three utility items at once, add up to five
   inventory rows, and change your base carry weight.

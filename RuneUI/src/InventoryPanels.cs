@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BepInEx.Configuration;
 using HarmonyLib;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +31,11 @@ namespace RuneUI
         private static readonly SlotPanel Gear = new SlotPanel("RuneUI_GearSlots");
         private static InventoryGui _gui;
 
+        // The panel being dragged with the drag key, and the settings that hold its position.
+        private static SlotPanel _dragging;
+        private static ConfigEntry<float> _dragX, _dragY;
+        private static Vector2 _dragStartMouse, _dragStartOffset, _dragOffset;
+
         /// <summary>InventoryGui.UpdateInventory postfix, which runs while the inventory is open.</summary>
         public static void Update(InventoryGui gui, Player player)
         {
@@ -46,13 +52,15 @@ namespace RuneUI
             var right = new Vector2(1f, 1f);
             var besideInventory = new Vector2(ChestGap + gui.m_playerGrid.m_elementSpace, 0f);
 
+            // Under the inventory, unless a chest is open: it opens below the inventory, so move right of it.
+            bool chestOpen = gui.m_container != null && gui.m_container.gameObject.activeInHierarchy;
+            ConfigEntry<float> quickX = chestOpen ? Plugin.QuickChestOffsetX : Plugin.QuickInventoryOffsetX;
+            ConfigEntry<float> quickY = chestOpen ? Plugin.QuickChestOffsetY : Plugin.QuickInventoryOffsetY;
             if (quick != null)
             {
-                // Under the inventory, unless a chest is open: it opens below the inventory, so move right of it.
-                bool chestOpen = gui.m_container != null && gui.m_container.gameObject.activeInHierarchy;
-                if (chestOpen) Quick.Update(gui, quick, player, right, besideInventory, QuickSlots.KeyLabel, null);
-                else Quick.Update(gui, quick, player, Vector2.zero,
-                    new Vector2(Plugin.QuickInventoryOffsetX.Value, Plugin.QuickInventoryOffsetY.Value), QuickSlots.KeyLabel, null);
+                Vector2 corner = chestOpen ? right : Vector2.zero;
+                Vector2 spot = chestOpen ? besideInventory : Vector2.zero;
+                Quick.Update(gui, quick, player, corner, spot + Offset(Quick, quickX, quickY), QuickSlots.KeyLabel, null);
                 // The gear stays put under the spot the quick slots take beside the inventory.
                 besideInventory.y -= Quick.Height + PanelGap;
             }
@@ -60,9 +68,63 @@ namespace RuneUI
             {
                 Quick.Remove();
             }
-            if (gear != null) Gear.Update(gui, gear, player, right, besideInventory, null, GearSlots.Placeholder);
+            if (gear != null)
+                Gear.Update(gui, gear, player, right, besideInventory + Offset(Gear, Plugin.GearOffsetX, Plugin.GearOffsetY),
+                    null, GearSlots.Placeholder);
             else Gear.Remove();
+
+            UpdateDrag(gui, quick != null ? quickX : null, quick != null ? quickY : null);
         }
+
+        /// <summary>A panel's offset: from its settings, or where it is being dragged to.</summary>
+        private static Vector2 Offset(SlotPanel panel, ConfigEntry<float> x, ConfigEntry<float> y) =>
+            ReferenceEquals(panel, _dragging) ? _dragOffset : new Vector2(x.Value, y.Value);
+
+        /// <summary>Whether the panel drag key is held, so clicks on the panels move them instead.</summary>
+        public static bool DragKeyHeld => QuickKeys.Check(Plugin.PanelDragKey.Value, true);
+
+        /// <summary>
+        /// Holding the drag key, a panel follows the mouse while the left button is held. The settings
+        /// are written once on release, since every setting change rebuilds what this mod draws.
+        /// </summary>
+        private static void UpdateDrag(InventoryGui gui, ConfigEntry<float> quickX, ConfigEntry<float> quickY)
+        {
+            var space = (RectTransform)gui.m_player;
+            Vector2 mouse = ZInput.pointerPosition;
+            Camera camera = null;
+            Canvas canvas = space.GetComponentInParent<Canvas>();
+            if (canvas != null && canvas.renderMode != RenderMode.ScreenSpaceOverlay) camera = canvas.worldCamera;
+            RectTransformUtility.ScreenPointToLocalPointInRectangle(space, mouse, camera, out Vector2 local);
+
+            if (_dragging != null)
+            {
+                if (ZInput.GetMouseButton(0) && DragKeyHeld)
+                {
+                    _dragOffset = _dragStartOffset + (local - _dragStartMouse);
+                    return;
+                }
+                _dragX.Value = Mathf.Round(_dragOffset.x);
+                _dragY.Value = Mathf.Round(_dragOffset.y);
+                _dragging = null;
+                return;
+            }
+
+            if (!ZInput.GetMouseButtonDown(0) || !DragKeyHeld) return;
+            if (quickX != null && Quick.Contains(mouse, camera)) Start(Quick, quickX, quickY, local);
+            else if (Gear.Contains(mouse, camera)) Start(Gear, Plugin.GearOffsetX, Plugin.GearOffsetY, local);
+        }
+
+        private static void Start(SlotPanel panel, ConfigEntry<float> x, ConfigEntry<float> y, Vector2 mouse)
+        {
+            _dragging = panel;
+            _dragX = x;
+            _dragY = y;
+            _dragStartMouse = mouse;
+            _dragStartOffset = _dragOffset = new Vector2(x.Value, y.Value);
+        }
+
+        /// <summary>InventoryGui.OnSelectedItem prefix: with the drag key held, clicks on the panels only move them.</summary>
+        public static bool Dragging(InventoryGrid grid) => Ours(grid.GetInventory()) && DragKeyHeld;
 
         private static bool Ours(Inventory inventory) => QuickSlots.Owns(inventory) || GearSlots.Owns(inventory);
 
@@ -134,6 +196,7 @@ namespace RuneUI
         public static void ResetState()
         {
             _gui = null;
+            _dragging = null;
             Quick.Forget();
             Gear.Forget();
         }
@@ -153,6 +216,10 @@ namespace RuneUI
             }
 
             public float Height => _panel != null ? _panel.sizeDelta.y : 0f;
+
+            public bool Contains(Vector2 screen, Camera camera) =>
+                _panel != null && _panel.gameObject.activeInHierarchy &&
+                RectTransformUtility.RectangleContainsScreenPoint(_panel, screen, camera);
 
             /// <param name="label">Text in each slot's corner, or null for none.</param>
             /// <param name="placeholder">Icon shown in each empty slot, or null for none.</param>
