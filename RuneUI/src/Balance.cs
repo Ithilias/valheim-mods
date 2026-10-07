@@ -54,9 +54,10 @@ namespace RuneUI
             {
                 _player = player;
                 _carryApplied = false;
-                _appliedRows = player.GetInventory().GetHeight();
             }
 
+            // Spawning sets the size, through the prefix above, only once vanilla saved a row count;
+            // until then this applies the extra rows.
             int rows = Rows(VanillaRows(player));
             if (rows != _appliedRows && InventoryGui.instance != null) player.SetInventorySize(VanillaRows(player));
 

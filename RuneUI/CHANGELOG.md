@@ -1,5 +1,8 @@
 # Changelog
 
+## 0.10.1
+- The inventory is no longer resized a second time right after you spawn.
+
 ## 0.10.0
 - Works with Better Archery's quiver: Rune UI no longer puts items into the two rows it keeps below
   your inventory, and keeps them when it adds inventory rows or takes over from Equipment and Quick
