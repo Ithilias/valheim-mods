@@ -1,6 +1,6 @@
 {
   "name": "RoundMinimap",
-  "version_number": "1.3.2",
+  "version_number": "1.3.3",
   "website_url": "https://github.com/Ithilias/valheim-mods",
   "description": "A round minimap that turns with you, so whatever is ahead is always at the top. Compass, resizing and zoom included.",
   "dependencies": [

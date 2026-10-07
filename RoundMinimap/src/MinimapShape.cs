@@ -17,6 +17,7 @@ namespace RoundMinimap
     {
         private const string BorderName = "RoundMinimapBorder";
         private const int TextureSize = 512;
+        private const string VanillaFrameSprite = "InputFieldBackground";
 
         private static CircleMeshEffect _effect;
         private static GameObject _border;
@@ -110,7 +111,7 @@ namespace RoundMinimap
             if (_border != null)
             {
                 var borderImage = _border.GetComponent<Image>();
-                if (borderImage != null) borderImage.color = Plugin.BorderColor.Value;
+                if (borderImage != null) borderImage.color = BorderColour(map);
             }
 
             ApplyLayout(map, mapRect, freshEffect || circleScale != _appliedCircleScale);
@@ -399,6 +400,33 @@ namespace RoundMinimap
                 shadow * texelsPerPixel,
                 Mathf.Clamp01(Plugin.BorderShadowStrength.Value));
             borderImage.raycastTarget = false;
+        }
+
+        /// <summary>
+        /// The configured border colour, or, while its colour is left at the default, the colour of
+        /// the vanilla frame the round map replaces, as long as that frame still has its vanilla sprite. Mods that tint that frame, such as Seasons,
+        /// then carry over. The alpha always comes from the setting: the frame is a faint backing
+        /// panel, and its alpha would make a thin rim almost invisible.
+        /// </summary>
+        private static Color BorderColour(Minimap map)
+        {
+            Color configured = Plugin.BorderColor.Value;
+            if (!SameRgb(configured, (Color)Plugin.BorderColor.DefaultValue)) return configured;
+            if (map.m_smallRoot == null || !map.m_smallRoot.TryGetComponent(out Image frame)) return configured;
+            // Only the plain vanilla panel: a UI mod's textured frame is usually left white and
+            // would turn the rim white too.
+            if (frame.sprite == null || frame.sprite.name != VanillaFrameSprite) return configured;
+
+            Color tint = frame.color;
+            return new Color(tint.r, tint.g, tint.b, configured.a);
+        }
+
+        // The config file stores colours as bytes, so a default read back from it is not exactly
+        // the float default.
+        private static bool SameRgb(Color a, Color b)
+        {
+            Color32 x = a, y = b;
+            return x.r == y.r && x.g == y.g && x.b == y.b;
         }
 
         private static void RemoveBorder()

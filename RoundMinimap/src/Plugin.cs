@@ -145,7 +145,10 @@ namespace RoundMinimap
                 new ConfigDescription("Peak opacity of that shadow, relative to the border colour's alpha. Round map only.",
                     new AcceptableValueRange<float>(0f, 1f)));
             BorderColor = Config.Bind("3 - Shape", "Border color", new Color(0.05f, 0.04f, 0.03f, 0.9f),
-                "Colour of the rim and its shadow. Round map only.");
+                "Colour of the rim and its shadow. Round map only. While the colour is left at this " +
+                "default, the rim takes the colour of the vanilla map frame instead, so mods that " +
+                "recolour that frame, such as Seasons, carry over. Any other colour, even one step off, " +
+                "is used as set. Its opacity is always used.");
 
             HideSquareBackground = Config.Bind("4 - Layout", "Hide square background", true,
                 "Switch off the graphics of any panel larger than the circle, so the vanilla square " +

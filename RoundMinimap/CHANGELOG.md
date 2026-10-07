@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.3.3
+- The round map's rim now follows the colour of the vanilla map frame while `Border color` is left
+  at its default colour. Mods that recolour the minimap frame, such as Seasons with its seasonal
+  border colours, now carry over to the round map. Without such a mod the rim is black, almost the
+  same as before.
+- If you set your own `Border color`, nothing changes. Its opacity applies either way, so you can
+  still make the rim stronger or fainter without losing the frame colour.
+
 ## 1.3.2
 - The sail and wind display you see while steering a ship now moves down when a bigger or moved
   map would cover it. New setting `Move sailing display below map` (section `4 - Layout`), on by
