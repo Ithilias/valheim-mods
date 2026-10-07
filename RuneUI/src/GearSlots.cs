@@ -206,6 +206,20 @@ namespace RuneUI
             if (item != null && !item.m_equipped) player.EquipItem(item);
         }
 
+        /// <summary>Set while vanilla loads a character, which re-equips what GetEquippedItems lists.</summary>
+        public static bool Loading;
+
+        /// <summary>
+        /// Inventory.GetEquippedItems postfix: other mods, such as Epic Loot, find worn gear through it,
+        /// so gear worn from the slots is listed as part of the player's inventory.
+        /// </summary>
+        public static void AddEquipped(Inventory inventory, List<ItemDrop.ItemData> items)
+        {
+            if (Loading || Store.Current == null || !Store.IsOwnersInventory(inventory)) return;
+            foreach (var item in Store.Current.GetAllItems())
+                if (item.m_equipped && !items.Contains(item)) items.Add(item);
+        }
+
         /// <summary>Inventory.GetWornItems postfix: workbenches repair the slots too.</summary>
         public static void AddWorn(Inventory inventory, List<ItemDrop.ItemData> worn)
         {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1
+- Gear in the gear slots now counts for other mods that look at what you wear, such as Epic Loot's
+  magic effects and set bonuses.
+
 ## 0.3.0
 - New gear slots right of the inventory: head, chest, legs, cape, utility and trinket. Armour you
   wear sits there instead of taking up inventory space. Workbenches repair and upgrade it there too.

@@ -218,6 +218,14 @@ namespace RuneUI
         // Food and gear slots: saving, weight, wearing and death. These always run, even with the mod
         // switched off, so items in the slots are never lost.
 
+        [HarmonyPrefix]
+        [HarmonyPatch(typeof(Player), nameof(Player.Load))]
+        private static void PlayerLoadPrefix() => GearSlots.Loading = true;
+
+        [HarmonyFinalizer]
+        [HarmonyPatch(typeof(Player), nameof(Player.Load))]
+        private static void PlayerLoadFinalizer() => GearSlots.Loading = false;
+
         [HarmonyPostfix]
         [HarmonyPatch(typeof(Player), nameof(Player.Load))]
         private static void PlayerLoadPostfix(Player __instance)
@@ -280,6 +288,14 @@ namespace RuneUI
         {
             try { GearSlots.AfterUnequip(__instance, item); }
             catch (Exception e) { Plugin.Log.LogError($"Moving gear out of its slot failed: {e}"); }
+        }
+
+        [HarmonyPostfix]
+        [HarmonyPatch(typeof(Inventory), nameof(Inventory.GetEquippedItems))]
+        private static void InventoryGetEquippedItemsPostfix(Inventory __instance, List<ItemDrop.ItemData> __result)
+        {
+            try { GearSlots.AddEquipped(__instance, __result); }
+            catch (Exception e) { Plugin.Log.LogError($"Listing worn gear failed: {e}"); }
         }
 
         [HarmonyPostfix]
