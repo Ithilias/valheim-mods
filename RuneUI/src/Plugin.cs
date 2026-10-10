@@ -30,6 +30,7 @@ namespace RuneUI
         internal static ConfigEntry<Color> Quality3Color;
         internal static ConfigEntry<Color> Quality4Color;
         internal static ConfigEntry<Color> QualityAboveMaxColor;
+        internal static ConfigEntry<Color> GemColor;
 
         internal static ConfigEntry<string> FontName;
         internal static ConfigEntry<float> FontScale;
@@ -58,6 +59,10 @@ namespace RuneUI
         internal static ConfigEntry<float> HotbarOffsetY;
         internal static ConfigEntry<float> HotbarScale;
         internal static ConfigEntry<bool> PowerSlot;
+        internal static ConfigEntry<bool> BackdropEnabled;
+        internal static ConfigEntry<BackdropStyle> BackdropStyle;
+        internal static ConfigEntry<float> BackdropOpacity;
+        internal static ConfigEntry<float> BackdropPadding;
         internal static ConfigEntry<bool> UnifyBuffs;
         internal static ConfigEntry<HudAnchor> BuffsAnchor;
         internal static ConfigEntry<float> BuffsOffsetX;
@@ -149,6 +154,9 @@ namespace RuneUI
             QualityAboveMaxColor = Config.Bind("2 - Colors", "Quality above max", new Color(0.92f, 0.18f, 0.15f, 1f),
                 "Ring around items upgraded past their normal maximum, shown with the quality number.");
 
+            GemColor = Config.Bind("2 - Colors", "Frame gems", new Color(0.72f, 0.10f, 0.08f, 1f),
+                "Gems in the corners of the ornate backdrop. Its metal uses the panel border colour.");
+
             FontName = Config.Bind("3 - Font", "Font name", "",
                 "Name of a TextMeshPro font loaded by the game, for example Norse SDF or AveriaSerifLibre-Bold SDF. " +
                 "Empty uses the font of the vanilla health text.");
@@ -190,7 +198,7 @@ namespace RuneUI
                 new ConfigDescription("Space between stacked blocks.", new AcceptableValueRange<float>(0f, 50f)));
             StackKeyHints = Config.Bind("5 - HUD layout", "Stack key hints", true,
                 "Show the key hints in the bottom right as a column instead of a long row.");
-            KeyHintsSpacing = Config.Bind("5 - HUD layout", "Key hints spacing", 4f,
+            KeyHintsSpacing = Config.Bind("5 - HUD layout", "Key hints spacing", 12f,
                 new ConfigDescription("Space between stacked key hints.", new AcceptableValueRange<float>(0f, 40f)));
             MoveHotbar = Config.Bind("5 - HUD layout", "Move hotbar", true,
                 "Move the vanilla hotbar to the position below.");
@@ -202,13 +210,23 @@ namespace RuneUI
             HotbarAnchor = Config.Bind("5 - HUD layout", "Hotbar anchor", HudAnchor.Bottom,
                 "Screen point the hotbar is placed relative to.");
             HotbarOffsetX = BindOffset("5 - HUD layout", "Hotbar offset X", 0f, "Horizontal offset from the anchor.");
-            HotbarOffsetY = BindOffset("5 - HUD layout", "Hotbar offset Y", 86f, "Vertical offset from the anchor.");
-            HotbarScale = Config.Bind("5 - HUD layout", "Hotbar scale", 1f,
+            HotbarOffsetY = BindOffset("5 - HUD layout", "Hotbar offset Y", 69f, "Vertical offset from the anchor.");
+            HotbarScale = Config.Bind("5 - HUD layout", "Hotbar scale", 0.734f,
                 new ConfigDescription("Size of the hotbar and quick bar, on top of HUD scale. They shrink and grow " +
                     "around the hotbar anchor, so the slots stay together. The hotbar's size needs Move hotbar.",
                     new AcceptableValueRange<float>(0.5f, 2f)));
             PowerSlot = Config.Bind("5 - HUD layout", "Forsaken power slot", true,
                 "Show your forsaken power as a slot right of the hotbar, with its key and cooldown, instead of the vanilla display.");
+            BackdropEnabled = Config.Bind("5 - HUD layout", "Backdrop", true,
+                "Draw a panel behind the hotbar, quick bar and bars, so they sit together, and behind the quick and " +
+                "gear slots in the inventory.");
+            BackdropStyle = Config.Bind("5 - HUD layout", "Backdrop style", RuneUI.BackdropStyle.Ornate,
+                "Ornate: a dark panel in a metal frame with gems in the corners. Vanilla: the background of the " +
+                "game's inventory.");
+            BackdropOpacity = Config.Bind("5 - HUD layout", "Backdrop opacity", 0.9f,
+                new ConfigDescription("How solid the backdrop's fill is. Its colour is the panel background colour.", new AcceptableValueRange<float>(0.1f, 1f)));
+            BackdropPadding = Config.Bind("5 - HUD layout", "Backdrop padding", 16f,
+                new ConfigDescription("Space between the backdrop's edge and what it holds.", new AcceptableValueRange<float>(0f, 40f)));
             UnifyBuffs = Config.Bind("5 - HUD layout", "Unify buffs", true,
                 "Show eaten food and status effects together as hotbar sized icons, instead of the vanilla displays.");
             BuffsAnchor = Config.Bind("5 - HUD layout", "Buffs anchor", HudAnchor.BottomLeft,
@@ -344,6 +362,7 @@ namespace RuneUI
         {
             _harmony?.UnpatchSelf();
             Theme.DestroySprites();
+            Frames.DestroySprites();
             Paperdoll.Destroy();
         }
     }

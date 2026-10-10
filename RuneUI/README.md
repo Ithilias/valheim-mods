@@ -13,7 +13,8 @@ restyled in later versions.
   themed bars. Eitr shares the stamina row once you have any. Adrenaline and stagger are thin bars
   above health that only show while they fill, so health and stamina never move.
 - **Hotbar under the bars.** The hotbar moves to the bottom centre and its slots get the theme. Your
-  forsaken power sits as a ninth slot on its right, with its key and cooldown.
+  forsaken power sits as a ninth slot on its right, with its key and cooldown. The bars, hotbar and
+  quick bar sit together on a dark panel in a bronze frame with gems in its corners.
 - **Second quick bar.** Your second inventory row is shown as another hotbar under the first, with
   Alt shown once on its left. Hold Left Alt and press 1 to 8 to use its items. While Alt is held, 1
   to 8 do not use the normal hotbar.
@@ -127,6 +128,7 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Quality 3 | blue | Ring at quality 3 |
 | Quality 4 | gold | Ring at quality 4 |
 | Quality above max | red | Ring around items upgraded past their normal maximum, with the number |
+| Frame gems | dark red | Gems in the corners of the ornate backdrop. Its metal uses `Panel border` |
 
 ### 3 - Font
 
@@ -158,15 +160,19 @@ offsets. Offsets go from -2000 to 2000; negative values move left and down.
 | Bars offset Y | `0` | Vertical offset. With `Stack bars`, a nudge from the stacked spot |
 | Bars width | `420` | Width of the bars, 150 to 1000 |
 | Stack key hints | `true` | Show the key hints in the bottom right as a column instead of a long row |
-| Key hints spacing | `4` | Space between stacked key hints, 0 to 40 |
+| Key hints spacing | `12` | Space between stacked key hints, 0 to 40 |
 | Move hotbar | `true` | Move the vanilla hotbar to the position below |
 | Style hotbar | `true` | Draw hotbar and quick bar slots in the theme |
 | Show empty hotbar slots | `true` | Always show all eight hotbar slots, like the quick bar. Vanilla only shows them up to the last item, and none after a death empties your inventory |
 | Hotbar anchor | `Bottom` | Screen point for the hotbar |
 | Hotbar offset X | `0` | Horizontal offset |
-| Hotbar offset Y | `86` | Vertical offset |
-| Hotbar scale | `1` | Size of the hotbar and quick bar on top of `HUD scale`, 0.5 to 2. They shrink and grow around the hotbar anchor, so the slots stay together. The hotbar's size needs `Move hotbar` |
+| Hotbar offset Y | `69` | Vertical offset. The default puts the quick bar 16 above the bottom edge |
+| Hotbar scale | `0.734` | Size of the hotbar and quick bar on top of `HUD scale`, 0.5 to 2. They shrink and grow around the hotbar anchor, so the slots stay together. The hotbar's size needs `Move hotbar` |
 | Forsaken power slot | `true` | Show your forsaken power as a slot right of the hotbar instead of the vanilla display |
+| Backdrop | `true` | Draw a panel behind the hotbar, quick bar and bars, so they sit together, and behind the quick and gear slots in the inventory |
+| Backdrop style | `Ornate` | `Ornate`: a dark panel in a metal frame with gems in the corners. `Vanilla`: the background of the game's inventory |
+| Backdrop opacity | `0.9` | How solid the backdrop's fill is, 0.1 to 1. Its colour is `Panel background` |
+| Backdrop padding | `16` | Space between the backdrop's edge and what it holds, 0 to 40 |
 | Unify buffs | `true` | Show eaten food and status effects together as hotbar sized icons instead of the vanilla displays |
 | Buffs anchor | `BottomLeft` | Screen point for the buffs. Rows fill away from it |
 | Buffs offset X | `20` | Horizontal offset |

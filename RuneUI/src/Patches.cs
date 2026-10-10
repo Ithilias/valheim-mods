@@ -22,6 +22,8 @@ namespace RuneUI
             new Feature { Name = "hotbar", Update = Hotbar.Update, Remove = Hotbar.Remove, ResetState = Hotbar.ResetState },
             new Feature { Name = "quick bar", Update = QuickBar2.Update, Remove = QuickBar2.Remove, ResetState = QuickBar2.ResetState },
             new Feature { Name = "bars", Update = HudBars.Update, Remove = HudBars.Remove, ResetState = HudBars.ResetState },
+            // After the blocks it sits behind, so it covers where they are this frame.
+            new Feature { Name = "backdrop", Update = Backdrop.Update, Remove = Backdrop.Remove, ResetState = Backdrop.ResetState },
             new Feature { Name = "buffs", Update = BuffBar.Update, Remove = BuffBar.Remove, ResetState = BuffBar.ResetState },
             new Feature { Name = "party list", Update = PartyList.Update, Remove = PartyList.Remove, ResetState = PartyList.ResetState },
             new Feature { Name = "skill toasts", Update = SkillToasts.Update, Remove = SkillToasts.Remove, ResetState = SkillToasts.ResetState },

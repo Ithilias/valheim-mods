@@ -147,6 +147,9 @@ namespace RuneUI
             return Rect.MinMaxRect(min.x, min.y, max.x, max.y);
         }
 
+        public static Rect Union(Rect a, Rect b) =>
+            Rect.MinMaxRect(Mathf.Min(a.xMin, b.xMin), Mathf.Min(a.yMin, b.yMin), Mathf.Max(a.xMax, b.xMax), Mathf.Max(a.yMax, b.yMax));
+
         /// <summary>
         /// Places a stacked block: on the hotbar's anchor, moved so its measured edge lands where wanted.
         /// <paramref name="measured"/> and <paramref name="wanted"/> are in the block's parent space.

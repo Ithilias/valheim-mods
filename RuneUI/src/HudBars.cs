@@ -102,6 +102,18 @@ namespace RuneUI
             }
         }
 
+        /// <summary>
+        /// The box around the health and stamina rows as drawn, in <paramref name="space"/>. The thin
+        /// adrenaline and stagger bars come and go, so they are left out.
+        /// </summary>
+        public static bool TryBounds(Transform space, out Rect bounds)
+        {
+            bounds = Rect.zero;
+            if (_root == null || !_root.gameObject.activeInHierarchy) return false;
+            bounds = Theme.Union(Theme.Bounds(_health.Root, space), Theme.Bounds(_stamina.Root, space));
+            return true;
+        }
+
         /// <summary>Runs after the vanilla animators, which may drive the bars' transforms.</summary>
         public static void HideVanilla(Hud hud)
         {

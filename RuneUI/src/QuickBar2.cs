@@ -77,6 +77,28 @@ namespace RuneUI
             }
         }
 
+        /// <summary>
+        /// The box around the slots and the modifier's text as drawn, in <paramref name="space"/>. The
+        /// label's own rect is wider than its text, so the text's bounds are used.
+        /// </summary>
+        public static bool TryBounds(Transform space, out Rect bounds)
+        {
+            bounds = Rect.zero;
+            if (_root == null || !_root.gameObject.activeInHierarchy) return false;
+            bounds = Theme.Bounds((RectTransform)Slots[0].Go.transform, space);
+            bounds = Theme.Union(bounds, Theme.Bounds((RectTransform)Slots[Hotbar.SlotCount - 1].Go.transform, space));
+            if (_builtWithSlots > 0)
+                bounds = Theme.Union(bounds, Theme.Bounds((RectTransform)ExtraSlots[_builtWithSlots - 1].Go.transform, space));
+            Bounds text = _modifierLabel.textBounds;
+            if (_modifierLabel.text.Length > 0 && text.size.x > 0f)
+            {
+                Vector2 min = space.InverseTransformPoint(_modifierLabel.transform.TransformPoint(text.min));
+                Vector2 max = space.InverseTransformPoint(_modifierLabel.transform.TransformPoint(text.max));
+                bounds = Theme.Union(bounds, Rect.MinMaxRect(min.x, min.y, max.x, max.y));
+            }
+            return true;
+        }
+
         /// <summary>Called after Player.Update for the local player.</summary>
         public static void HandleInput(Player player)
         {

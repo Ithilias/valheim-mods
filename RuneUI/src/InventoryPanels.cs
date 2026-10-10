@@ -14,7 +14,10 @@ namespace RuneUI
     /// </summary>
     internal static class InventoryPanels
     {
-        private const float Padding = 6f;
+        private const float PlainPadding = 6f;
+
+        /// <summary>Space around the slots; a backdrop's rim needs more room than the plain panel.</summary>
+        private static float Padding => Plugin.BackdropEnabled.Value ? Frames.RimDepth + 2f : PlainPadding;
         private const float ChestGap = 12f;
         private const float PanelGap = 6f;
 
@@ -328,7 +331,15 @@ namespace RuneUI
                 InventoryGrid source = gui.m_playerGrid;
                 float space = source.m_elementSpace;
 
-                _panel = Theme.NewPanel(_name, gui.m_player).rectTransform;
+                if (Plugin.BackdropEnabled.Value)
+                {
+                    _panel = Theme.NewRect(_name, gui.m_player);
+                    Frames.Build(_panel, Plugin.BackdropStyle.Value, Plugin.BackdropOpacity.Value);
+                }
+                else
+                {
+                    _panel = Theme.NewPanel(_name, gui.m_player).rectTransform;
+                }
                 _panel.anchorMin = _panel.anchorMax = Vector2.zero;
                 _panel.pivot = new Vector2(0f, 1f);
                 _builtDoll = Doll;

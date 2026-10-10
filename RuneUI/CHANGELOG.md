@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.0
+- New backdrop: the bars, hotbar and quick bar sit together on a dark panel in a bronze frame with
+  gem studded corners, and so do the quick and gear slots in the inventory. The Vanilla style uses
+  the game's inventory background instead. Style, opacity, padding and gem colour are settings.
+- The hotbars are smaller and lower by default: the quick bar now sits 16 above the bottom edge.
+  Existing settings are kept; reset Hotbar offset Y and Hotbar scale to get the new defaults.
+- The key hints in the bottom right are a clean column again, with more space between them. Before,
+  each hint was squashed into itself and its text did not show. Key hints spacing is now 12 by
+  default.
+
 ## 0.10.1
 - The inventory is no longer resized a second time right after you spawn.
 

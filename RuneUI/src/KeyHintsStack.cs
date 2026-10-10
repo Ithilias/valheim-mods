@@ -55,17 +55,17 @@ namespace RuneUI
                 hints.m_buildHints, hints.m_combatHints, hints.m_inventoryHints,
                 hints.m_inventoryWithContainerHints, hints.m_fishingHints, hints.m_barberHints,
             };
+            var rows = new List<HorizontalLayoutGroup>();
             foreach (var group in groups)
             {
                 if (group == null) continue;
+                // Only the rows themselves: each hint and its key box lay out their label and key
+                // with a horizontal layout too, and those sit below a row. Pick the rows before
+                // swapping any, or a swapped row no longer counts as a row above its hints.
                 foreach (var row in group.GetComponentsInChildren<HorizontalLayoutGroup>(true))
-                {
-                    // Only the rows themselves: a single hint can use a horizontal layout for its
-                    // key and label, and that one sits below a row.
-                    if (HasRowAbove(row.transform, group.transform)) continue;
-                    Swap(row);
-                }
+                    if (!HasRowAbove(row.transform, group.transform)) rows.Add(row);
             }
+            foreach (var row in rows) Swap(row);
             if (Swaps.Count == 0 && !_warned)
             {
                 _warned = true;
@@ -77,7 +77,7 @@ namespace RuneUI
         {
             for (var p = t.parent; p != null; p = p.parent)
             {
-                if (p.GetComponent<HorizontalLayoutGroup>() != null) return true;
+                if (p.GetComponent<HorizontalOrVerticalLayoutGroup>() != null) return true;
                 if (p == groupRoot) break;
             }
             return false;

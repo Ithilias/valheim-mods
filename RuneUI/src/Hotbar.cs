@@ -172,17 +172,26 @@ namespace RuneUI
         /// </summary>
         public static bool TryEdges(Transform space, out float bottom, out float top)
         {
-            bottom = float.MaxValue;
-            top = float.MinValue;
+            bool found = TryBounds(space, out Rect r);
+            bottom = r.yMin;
+            top = r.yMax;
+            return found;
+        }
+
+        /// <summary>The box around the hotbar's slots as drawn, in <paramref name="space"/>.</summary>
+        public static bool TryBounds(Transform space, out Rect bounds)
+        {
+            bounds = Rect.zero;
+            bool found = false;
             if (_bar == null) return false;
             foreach (Transform child in _bar.transform)
             {
                 if (!child.gameObject.activeInHierarchy || !(child is RectTransform rt)) continue;
                 Rect r = Theme.Bounds(rt, space);
-                bottom = Mathf.Min(bottom, r.yMin);
-                top = Mathf.Max(top, r.yMax);
+                bounds = found ? Theme.Union(bounds, r) : r;
+                found = true;
             }
-            return top > bottom;
+            return found && bounds.height > 0f;
         }
 
         private static void Move(HotkeyBar bar)
