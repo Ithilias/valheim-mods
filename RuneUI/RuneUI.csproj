@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>RuneUI</AssemblyName>
+    <RootNamespace>RuneUI</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <GameAssembly Include="assembly_valheim;assembly_utils;assembly_guiutils" />
+    <GameAssembly Include="UnityEngine;UnityEngine.CoreModule;UnityEngine.UI;UnityEngine.UIModule;UnityEngine.AnimationModule" />
+    <GameAssembly Include="UnityEngine.InputLegacyModule;UnityEngine.TextRenderingModule;Unity.TextMeshPro;Unity.InputSystem" />
+  </ItemGroup>
+</Project>

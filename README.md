@@ -7,6 +7,7 @@ Client-side [BepInEx](https://github.com/BepInEx/BepInEx) mods for Valheim by It
 | [RoundMinimap](RoundMinimap) | A round minimap that turns with you, with compass letters, resizing and zoom. |
 | [StatusKeeper](StatusKeeper) | Keeps Rested and other timed buffs when you log out and back in. |
 | [SnappySync](SnappySync) | Creatures and other players catch up to where they really are faster, so hits and dodges show up sooner. |
+| [RuneUI](RuneUI) | A themed HUD with bars and hotbars at the bottom centre, a second quick bar, food slots, quality rings and a party list. |
 
 Each mod's folder has its own README with settings and details, and a CHANGELOG.
 
