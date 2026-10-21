@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.4.1
 - The piece author box and the sailing display now also keep clear of the biome label when it sits
   centred under the round map. Before, the author box could cover the biome name.
 
