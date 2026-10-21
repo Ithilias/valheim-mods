@@ -155,10 +155,10 @@ namespace RoundMinimap
                 new ConfigDescription("Peak opacity of that shadow, relative to the border colour's alpha. Round map only.",
                     new AcceptableValueRange<float>(0f, 1f)));
             BorderColor = Config.Bind("3 - Shape", "Border color", new Color(0.05f, 0.04f, 0.03f, 0.9f),
-                "Colour of the rim and its shadow. Round map only. While the colour is left at this " +
-                "default, the rim takes the colour of the vanilla map frame instead, so mods that " +
-                "recolour that frame, such as Seasons, carry over. Any other colour, even one step off, " +
-                "is used as set. Its opacity is always used.");
+                "Colour of the rim and its shadow. Round map only, but 7 - Biome label can use it too. " +
+                "While the colour is left at this default, the rim takes the colour of the vanilla map " +
+                "frame instead, so mods that recolour that frame, such as Seasons, carry over. Any other " +
+                "colour, even one step off, is used as set. Its opacity is always used.");
 
             HideSquareBackground = Config.Bind("4 - Layout", "Hide square background", true,
                 "Switch off the graphics of any panel larger than the circle, so the vanilla square " +
@@ -270,8 +270,9 @@ namespace RoundMinimap
             BiomeBorderColor = Config.Bind("7 - Biome label", "Border color", new Color(0.96f, 0.93f, 0.85f, 0.8f),
                 "Colour of that border.");
             BiomeBorderFollowsMap = Config.Bind("7 - Biome label", "Border follows map border", false,
-                "Give this border the colour of the map's own border (section 3 - Shape), including the " +
-                "colours mods such as Seasons give the map frame. Its opacity still comes from Border color.");
+                "Use the colour set as Border color in section 3 - Shape for this border too. While that " +
+                "colour is at its default, it follows the vanilla map frame, so recolouring by mods such as " +
+                "Seasons carries over. The opacity still comes from this section's Border color.");
             BiomeShadowSize = Config.Bind("7 - Biome label", "Shadow size", 0f,
                 new ConfigDescription("Width in pixels of a soft drop shadow around the box. 0 draws none. " +
                     "Works without a background colour too, as a soft shade behind the name.",

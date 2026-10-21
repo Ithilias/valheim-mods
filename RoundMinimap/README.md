@@ -86,7 +86,7 @@ Round map only.
 | Border thickness | `3` | Rim over the circle's edge. `0` for none |
 | Border shadow | `5` | Soft shadow fading outwards. `0` for none |
 | Border shadow strength | `0.5` | |
-| Border color | `0D0A08E6` (dark) | Colour and opacity of the rim and shadow. While the colour is left at the default, the rim follows the vanilla map frame, so mods that recolour it (e.g. Seasons) carry over. Any other colour is used as set |
+| Border color | `0D0A08E6` (dark) | Colour and opacity of the rim and shadow. While the colour is left at the default, the rim follows the vanilla map frame, so mods that recolour it (e.g. Seasons) carry over. Any other colour is used as set. `7 - Biome label / Border follows map border` can use it too |
 
 ### 4 - Layout
 
@@ -135,7 +135,7 @@ turn it on.
 | Corner radius | `4` | `0` for square corners |
 | Border thickness | `0` | Border around the box. `0` for none. Also works without a background colour |
 | Border color | warm white | |
-| Border follows map border | `false` | Gives this border the map border's colour, including seasonal colours from mods such as Seasons. Opacity still comes from `Border color` |
+| Border follows map border | `false` | Uses the colour of `3 - Shape / Border color` for this border too, so while that is at its default, seasonal colours from mods such as Seasons carry over. Opacity still comes from this section's `Border color` |
 | Shadow size | `0` | Soft drop shadow around the box. `0` for none. Also works without a background colour |
 | Shadow offset | `2` | Moves the shadow down. Negative moves it up |
 | Shadow color | black, 80% | |

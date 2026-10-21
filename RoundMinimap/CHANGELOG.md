@@ -12,8 +12,8 @@
 - The biome label box can have a soft drop shadow: new settings `Shadow size`, `Shadow offset` and
   `Shadow color` in section `7 - Biome label`. Off by default.
 - New setting `Border follows map border` (section `7 - Biome label`): the biome label's border
-  takes the colour of the map's own border, so seasonal colours from mods such as Seasons carry over
-  to it too. Off by default.
+  takes the colour of the map's border. While the map's `Border color` is at its default, seasonal
+  colours from mods such as Seasons carry over to it too. Off by default.
 
 ## 1.3.3
 - The round map's rim now follows the colour of the vanilla map frame while `Border color` is left
