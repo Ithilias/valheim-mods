@@ -20,6 +20,20 @@ for mod in "${mods[@]}"; do
   [ -f "$mod/manifest.json" ] || { echo "No mod named '$mod' (no $mod/manifest.json)." >&2; exit 1; }
 done
 
+# The zip is what gets uploaded, CHANGELOG included, and a version can be uploaded only once:
+# never package changes that are not released yet. For test builds use dotnet build (README).
+for mod in "${mods[@]}"; do
+  version="$(grep -oP '"version_number"\s*:\s*"\K[^"]+' "$mod/manifest.json" || true)"
+  if grep -qx '## Unreleased' "$mod/CHANGELOG.md"; then
+    echo "$mod/CHANGELOG.md still has '## Unreleased'; release $mod first (bump version_number, rename the section)." >&2
+    exit 1
+  fi
+  grep -qxF "## $version" "$mod/CHANGELOG.md" \
+    || { echo "$mod/CHANGELOG.md has no '## $version' entry." >&2; exit 1; }
+  [ -z "$(git status --porcelain -- "$mod")" ] \
+    || echo "warning: $mod has uncommitted changes; the zip will not match what is committed." >&2
+done
+
 for mod in "${mods[@]}"; do
   dotnet build "$mod" -c Release --nologo -v quiet "${extra[@]}"
 

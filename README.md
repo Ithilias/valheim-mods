@@ -39,7 +39,7 @@ listed below by hand.
    Each mod ends up in `dist/<Mod>.zip` with its DLL, `manifest.json`, `icon.png`, `README.md` and
    `CHANGELOG.md`, ready to upload. Options after `--` go to `dotnet build`.
 
-To test quickly, add `-p:PluginTarget=/path/to/BepInEx/plugins/<Mod>` to `dotnet build` and the
+`build.sh` only packages released versions (see Contributing). To test quickly, add `-p:PluginTarget=/path/to/BepInEx/plugins/<Mod>` to `dotnet build` and the
 DLL is copied there. If a mod manager has already installed the mod, remove that copy first, or
 both load under the same plugin ID.
 
@@ -50,8 +50,13 @@ A mod's version lives only in its `manifest.json`; the build writes it into the 
 Issues and pull requests are welcome. Commit messages follow
 [Conventional Commits](https://www.conventionalcommits.org), scoped to the mod where it applies,
 for example `fix(roundminimap): respect map filters`. Pull requests run
-`.github/scripts/checks.sh`, which checks version bumps, CHANGELOG entries and config names; run
-it locally before pushing.
+`.github/scripts/checks.sh`, which checks CHANGELOG entries, versions and config names; run it
+locally before pushing.
+
+Changes are described for players under `## Unreleased` at the top of the mod's `CHANGELOG.md`;
+the version stays as it is. A release is its own pull request that bumps `version_number` in
+`manifest.json` and renames `## Unreleased` to that version. `build.sh` refuses to package a mod
+whose CHANGELOG still has `## Unreleased`.
 
 ## License
 
