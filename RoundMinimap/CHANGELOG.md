@@ -1,21 +1,21 @@
 # Changelog
 
-## Unreleased
+## 1.4.0
+- New settings `Font` (section `7 - Biome label`) and `Compass font` (section `5 - Compass`) to use
+  one of the game's other fonts, such as the runic-looking Norse header lettering.
+- The biome label box can have a soft drop shadow: new settings `Shadow size`, `Shadow offset` and
+  `Shadow color` in section `7 - Biome label`. Off by default.
+- New setting `Biome label in front of map` (section `4 - Layout`), on by default. Turn it off to
+  draw the biome label and its box behind the map instead.
+- New setting `Border follows map border` (section `7 - Biome label`): the biome label's border
+  takes the colour of the map's border. While the map's `Border color` is at its default, seasonal
+  colours from mods such as Seasons carry over to it too. Off by default.
+- Changes to the config file, for example from a mod manager such as Gale or a text editor, now
+  apply while the game is running.
 - The biome label and its background box now draw over the map and its rim. Before, a box reaching
   into the circle, for example with a small or negative `Biome label gap`, was partly hidden
   behind the map.
 - Pin names near the edge of the round map are now drawn over its rim instead of under it.
-- Changes to the config file, for example from a mod manager such as Gale or a text editor, now
-  apply while the game is running.
-- New setting `Biome label in front of map` (section `4 - Layout`), on by default. Turn it off to
-  draw the biome label and its box behind the map instead.
-- The biome label box can have a soft drop shadow: new settings `Shadow size`, `Shadow offset` and
-  `Shadow color` in section `7 - Biome label`. Off by default.
-- New setting `Border follows map border` (section `7 - Biome label`): the biome label's border
-  takes the colour of the map's border. While the map's `Border color` is at its default, seasonal
-  colours from mods such as Seasons carry over to it too. Off by default.
-- New settings `Font` (section `7 - Biome label`) and `Compass font` (section `5 - Compass`) to use
-  one of the game's other fonts, such as the runic-looking Norse header lettering.
 - The sail and rudder status shown while steering a ship now moves below a bigger map too. Before,
   only the wind display did, and the sail status could be almost fully covered.
 - The box naming who built the piece you look at (game setting `Show build piece author`) now moves
