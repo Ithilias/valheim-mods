@@ -54,6 +54,9 @@ namespace RoundMinimap
         internal static ConfigEntry<float> BiomeCornerRadius;
         internal static ConfigEntry<float> BiomeBorderThickness;
         internal static ConfigEntry<Color> BiomeBorderColor;
+        internal static ConfigEntry<float> BiomeShadowSize;
+        internal static ConfigEntry<float> BiomeShadowOffset;
+        internal static ConfigEntry<Color> BiomeShadowColor;
         internal static ConfigEntry<float> ZoomLevel;
         internal static ConfigEntry<float> ZoomStep;
         internal static ConfigEntry<KeyboardShortcut> ZoomInKey;
@@ -68,6 +71,7 @@ namespace RoundMinimap
         internal static ConfigEntry<bool> HideSquareBackground;
         internal static ConfigEntry<bool> CenterBiomeLabel;
         internal static ConfigEntry<float> BiomeLabelGap;
+        internal static ConfigEntry<bool> BiomeLabelInFront;
         internal static ConfigEntry<bool> PullWindMarkerIn;
         internal static ConfigEntry<float> WindMarkerDistance;
         internal static ConfigEntry<string> HiddenElements;
@@ -164,6 +168,9 @@ namespace RoundMinimap
             BiomeLabelGap = Config.Bind("4 - Layout", "Biome label gap", 8f,
                 new ConfigDescription("Pixels between the circle's edge and the biome label. Round map only.",
                     new AcceptableValueRange<float>(-40f, 60f)));
+            BiomeLabelInFront = Config.Bind("4 - Layout", "Biome label in front of map", true,
+                "Draw the biome label and its box in front of the map and its rim. Off puts them behind " +
+                "the map, so the map covers any part that reaches into the circle. Round map only.");
             PullWindMarkerIn = Config.Bind("4 - Layout", "Pull wind marker inside circle", true,
                 "Keep the wind arrow in the corner vanilla chose, but move it in along that direction " +
                 "until it sits inside the circle. Round map only.");
@@ -261,6 +268,15 @@ namespace RoundMinimap
                     new AcceptableValueRange<float>(0f, 8f)));
             BiomeBorderColor = Config.Bind("7 - Biome label", "Border color", new Color(0.96f, 0.93f, 0.85f, 0.8f),
                 "Colour of that border.");
+            BiomeShadowSize = Config.Bind("7 - Biome label", "Shadow size", 0f,
+                new ConfigDescription("Width in pixels of a soft drop shadow around the box. 0 draws none. " +
+                    "Works without a background colour too, as a soft shade behind the name.",
+                    new AcceptableValueRange<float>(0f, 24f)));
+            BiomeShadowOffset = Config.Bind("7 - Biome label", "Shadow offset", 2f,
+                new ConfigDescription("Pixels the shadow is moved down from the box.",
+                    new AcceptableValueRange<float>(-20f, 20f)));
+            BiomeShadowColor = Config.Bind("7 - Biome label", "Shadow color", new Color(0f, 0f, 0f, 0.6f),
+                "Colour of the shadow. The last two hex digits are its opacity at the box's edge.");
 
             DumpHierarchyKey = Config.Bind("9 - Debug", "Dump hierarchy key",
                 new KeyboardShortcut(KeyCode.F9, KeyCode.LeftControl),

@@ -35,6 +35,7 @@ namespace RoundMinimap
         private static bool _biomeLabelSaved;
         private static RectPlacement _biomeLabelOriginal;
         private static TextAlignmentOptions _biomeAlignmentOriginal;
+        private static int _biomeIndexOriginal = -1;
 
         private static RectTransform _root;
         private static bool _rootCaptured;
@@ -358,6 +359,7 @@ namespace RoundMinimap
             _disabledGraphics.Clear();
             _windMarkerSaved = false;
             _biomeLabelSaved = false;
+            _biomeIndexOriginal = -1;
             _appliedLayout = null;
             _appliedCircleScale = 0f;
             _appliedBorderThickness = -1f;
@@ -446,6 +448,7 @@ namespace RoundMinimap
                 Plugin.HideSquareBackground.Value.ToString(),
                 Plugin.CenterBiomeLabel.Value.ToString(),
                 Plugin.BiomeLabelGap.Value.ToString("F2"),
+                Plugin.BiomeLabelInFront.Value.ToString(),
                 Plugin.PullWindMarkerIn.Value.ToString(),
                 Plugin.WindMarkerDistance.Value.ToString("F2"));
             if (signature == _appliedLayout && !geometryChanged) return;
@@ -455,6 +458,7 @@ namespace RoundMinimap
 
             if (Plugin.HideSquareBackground.Value) HideBackingPanels(map, mapRect);
             if (Plugin.CenterBiomeLabel.Value) CenterBiomeLabel(map, mapRect);
+            if (!Plugin.BiomeLabelInFront.Value) MoveBiomeLabelBehindMap(map, mapRect);
             if (Plugin.PullWindMarkerIn.Value) PullWindMarkerIn(map, mapRect);
         }
 
@@ -477,6 +481,12 @@ namespace RoundMinimap
                 _biomeLabelOriginal.Restore(map.m_biomeNameSmall.rectTransform);
                 map.m_biomeNameSmall.alignment = _biomeAlignmentOriginal;
                 _biomeLabelSaved = false;
+            }
+
+            if (_biomeIndexOriginal >= 0 && map.m_biomeNameSmall != null)
+            {
+                map.m_biomeNameSmall.rectTransform.SetSiblingIndex(_biomeIndexOriginal);
+                _biomeIndexOriginal = -1;
             }
 
             _appliedLayout = null;
@@ -561,6 +571,25 @@ namespace RoundMinimap
             rect.anchoredPosition = UiTools.CenterOnAnchoredPosition(parent, mapRect)
                                     + new Vector2(0f, -(Radius + Plugin.BiomeLabelGap.Value));
             label.alignment = TextAlignmentOptions.Top;
+        }
+
+        /// <summary>
+        /// Draws the biome label before the map instead of after it. The map's shader overwrites
+        /// whatever is beneath it, so the map then covers any part of the label reaching into the
+        /// circle. The label's box follows it (see <see cref="BiomeLabelStyle"/>).
+        /// </summary>
+        private static void MoveBiomeLabelBehindMap(Minimap map, RectTransform mapRect)
+        {
+            var label = map.m_biomeNameSmall;
+            if (label == null || label.rectTransform.parent != mapRect.parent) return;
+            var rect = label.rectTransform;
+
+            int index = rect.GetSiblingIndex();
+            int mapIndex = mapRect.GetSiblingIndex();
+            if (index < mapIndex) return;
+
+            _biomeIndexOriginal = index;
+            rect.SetSiblingIndex(mapIndex);
         }
 
         /// <summary>
