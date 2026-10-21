@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.4.1
+- The piece author box and the sailing display now also keep clear of the biome label when it sits
+  centred under the round map. Before, the author box could cover the biome name.
+
 ## 1.4.0
 - New settings `Font` (section `7 - Biome label`) and `Compass font` (section `5 - Compass`) to use
   one of the game's other fonts, such as the runic-looking Norse header lettering.

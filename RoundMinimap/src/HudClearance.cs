@@ -110,6 +110,40 @@ namespace RoundMinimap
             return panel;
         }
 
+        /// <summary>
+        /// World-space bottom of the biome label while it sits centred under the round map, with
+        /// its box and shadow, or +infinity otherwise. Vanilla keeps the label inside the square,
+        /// so below the circle it counts as part of the map. Worked out from the label's settings
+        /// rather than its drawn size, which pulses when you enter a new biome and would make the
+        /// panels below twitch.
+        /// </summary>
+        private static float BiomeLabelBottom(Minimap map)
+        {
+            var label = map.m_biomeNameSmall;
+            if (!MinimapShape.IsApplied || !Plugin.CenterBiomeLabel.Value || label == null
+                || !label.isActiveAndEnabled)
+                return float.PositiveInfinity;
+
+            var rect = label.rectTransform;
+            var parent = rect.parent;
+            float scale = parent != null ? parent.lossyScale.y : 1f;
+
+            // In the parent's units, measured down from the label's own rect.
+            float below = 0f;
+            if (BiomeLabelStyle.Panel != null && BiomeLabelStyle.Panel.gameObject.activeInHierarchy)
+            {
+                below += Mathf.Max(0f, Plugin.BiomePaddingY.Value);
+                // Same rule as BiomeLabelStyle for whether the shadow is drawn.
+                if (Plugin.BiomeShadowSize.Value > 0f && Plugin.BiomeShadowColor.Value.a > 0.001f)
+                    below += Mathf.Max(0f, Plugin.BiomeShadowSize.Value + Plugin.BiomeShadowOffset.Value);
+            }
+
+            // Glyphs can reach below the rect (TMP overflows rather than clips). The text bounds are
+            // in the label's own space, which the pulse scales without changing them.
+            float bottom = Mathf.Min(rect.rect.yMin, label.textBounds.min.y);
+            return rect.position.y + (bottom - below) * scale;
+        }
+
         /// <summary>One panel moved down by the map's growth, remembering where it was.</summary>
         private sealed class MovedPanel
         {
@@ -168,7 +202,7 @@ namespace RoundMinimap
                 panel.y += _appliedShift;
 
                 float vanillaBottom = vanillaCentre.y - vanillaHalf.y;
-                float currentBottom = currentCentre.y - currentHalf.y;
+                float currentBottom = Mathf.Min(currentCentre.y - currentHalf.y, BiomeLabelBottom(map));
                 bool underMap = panel.yMax <= vanillaCentre.y
                                 && panel.xMax > currentCentre.x - currentHalf.x
                                 && panel.xMin < currentCentre.x + currentHalf.x;
