@@ -390,7 +390,9 @@ namespace RoundMinimap
             rect.sizeDelta = new Vector2(spriteRadius * 2f, spriteRadius * 2f);
             rect.anchoredPosition = UiTools.CenterOnAnchoredPosition(parent, mapRect);
             rect.localScale = Vector3.one;
-            rect.SetSiblingIndex(parent.childCount - 1);
+            // Right after the map, so the biome label and anything else vanilla draws over the map
+            // also draws over the rim.
+            rect.SetSiblingIndex(mapRect.GetSiblingIndex() + 1);
 
             var borderImage = _border.GetComponent<Image>();
             borderImage.sprite = UiTools.CreateBorderSprite(
