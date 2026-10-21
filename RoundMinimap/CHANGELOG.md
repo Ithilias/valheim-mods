@@ -4,6 +4,7 @@
 - The biome label and its background box now draw over the map and its rim. Before, a box reaching
   into the circle, for example with a small or negative `Biome label gap`, was partly hidden
   behind the map.
+- Pin names near the edge of the round map are now drawn over its rim instead of under it.
 
 ## 1.3.3
 - The round map's rim now follows the colour of the vanilla map frame while `Border color` is left
