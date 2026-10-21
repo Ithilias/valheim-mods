@@ -55,6 +55,7 @@ namespace RoundMinimap
         internal static ConfigEntry<float> BiomeBorderThickness;
         internal static ConfigEntry<Color> BiomeBorderColor;
         internal static ConfigEntry<bool> BiomeBorderFollowsMap;
+        internal static ConfigEntry<HudFont> BiomeFont;
         internal static ConfigEntry<float> BiomeShadowSize;
         internal static ConfigEntry<float> BiomeShadowOffset;
         internal static ConfigEntry<Color> BiomeShadowColor;
@@ -81,6 +82,7 @@ namespace RoundMinimap
         internal static ConfigEntry<float> CompassDistance;
         internal static ConfigEntry<float> CompassFontSize;
         internal static ConfigEntry<Color> CompassColor;
+        internal static ConfigEntry<HudFont> CompassFont;
         internal static ConfigEntry<KeyboardShortcut> DumpHierarchyKey;
 
         private Harmony _harmony;
@@ -249,6 +251,9 @@ namespace RoundMinimap
                     new AcceptableValueRange<float>(6f, 40f)));
             CompassColor = Config.Bind("5 - Compass", "Compass color", new Color(0.96f, 0.93f, 0.85f, 0.9f),
                 "Colour of the compass letters.");
+            CompassFont = Config.Bind("5 - Compass", "Compass font", HudFont.Default,
+                "Font of the compass letters, from the fonts the game ships. Default is the biome label's " +
+                "own font; Norse and NorseBold are the runic looking header lettering.");
 
             BiomeBackgroundColor = Config.Bind("7 - Biome label", "Background color", new Color(0f, 0f, 0f, 0f),
                 "Colour of a box drawn behind the biome name, to keep it readable over bright ground. " +
@@ -273,6 +278,9 @@ namespace RoundMinimap
                 "Use the colour set as Border color in section 3 - Shape for this border too. While that " +
                 "colour is at its default, it follows the vanilla map frame, so recolouring by mods such as " +
                 "Seasons carries over. The opacity still comes from this section's Border color.");
+            BiomeFont = Config.Bind("7 - Biome label", "Font", HudFont.Default,
+                "Font of the biome name, from the fonts the game ships. Norse and NorseBold are the runic " +
+                "looking header lettering.");
             BiomeShadowSize = Config.Bind("7 - Biome label", "Shadow size", 0f,
                 new ConfigDescription("Width in pixels of a soft drop shadow around the box. 0 draws none. " +
                     "Works without a background colour too, as a soft shade behind the name.",
