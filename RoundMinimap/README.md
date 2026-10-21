@@ -52,7 +52,8 @@ server and nobody else needs it.
 ## Settings
 
 Config file: `BepInEx/config/ithilias.roundminimap.cfg`, created the first time you run the game.
-Most settings apply immediately, without a restart.
+Most settings apply immediately, without a restart, also when the file is changed by a mod manager
+or a text editor while the game runs.
 
 ### 1 - General
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+- Changes to the config file, for example from a mod manager such as Gale or a text editor, now
+  apply while the game is running.
+
 ## 1.3.3
 - The round map's rim now follows the colour of the vanilla map frame while `Border color` is left
   at its default colour. Mods that recolour the minimap frame, such as Seasons with its seasonal
