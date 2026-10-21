@@ -1,6 +1,10 @@
 # Changelog
 
 ## Unreleased
+- The biome label and its background box now draw over the map and its rim. Before, a box reaching
+  into the circle, for example with a small or negative `Biome label gap`, was partly hidden
+  behind the map.
+- Pin names near the edge of the round map are now drawn over its rim instead of under it.
 - Changes to the config file, for example from a mod manager such as Gale or a text editor, now
   apply while the game is running.
 
