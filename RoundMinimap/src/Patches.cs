@@ -94,8 +94,10 @@ namespace RoundMinimap
                 // Last, so it measures the map where this frame left it.
                 RunIsolated(ref _statusLayoutFailed, "Status effect layout", StatusEffectClearance.Apply, __instance,
                     StatusEffectClearance.Restore);
-                RunIsolated(ref _shipLayoutFailed, "Sailing display and author box layout", HudClearance.Apply, __instance,
-                    HudClearance.Restore);
+                RunIsolated(ref _shipLayoutFailed, "Sailing display layout", HudClearance.ApplyShip, __instance,
+                    HudClearance.RestoreShip);
+                RunIsolated(ref _authorLayoutFailed, "Piece author box layout", HudClearance.ApplyAuthor, __instance,
+                    HudClearance.RestoreAuthor);
             }
             catch (System.Exception e)
             {
@@ -120,6 +122,7 @@ namespace RoundMinimap
 
         private static bool _statusLayoutFailed;
         private static bool _shipLayoutFailed;
+        private static bool _authorLayoutFailed;
 
         /// <summary>
         /// The status effect and sailing display layouts reach into the game's HUD, which a game
@@ -152,7 +155,8 @@ namespace RoundMinimap
             BiomeLabelFont.Restore();
             MinimapShape.RestorePlacement(map);
             StatusEffectClearance.Restore();
-            HudClearance.Restore();
+            HudClearance.RestoreShip();
+            HudClearance.RestoreAuthor();
             if (!string.IsNullOrEmpty(_appliedHiddenElements))
             {
                 MinimapShape.ApplyHiddenElements(map, Split(_appliedHiddenElements), hidden: false);

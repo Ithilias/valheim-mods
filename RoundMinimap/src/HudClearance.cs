@@ -14,39 +14,55 @@ namespace RoundMinimap
     /// </summary>
     internal static class HudClearance
     {
-        private static Hud _hud;
+        // The sailing display and the author box are run and fail separately (see Patches), so a
+        // game update breaking one leaves the other working.
+        private static Hud _shipHud;
+        private static Hud _authorHud;
         private static readonly MovedPanel _wind = new MovedPanel();
         private static readonly MovedPanel _sail = new MovedPanel();
         private static readonly MovedPanel _author = new MovedPanel();
 
-        public static void Apply(Minimap map)
+        public static void ApplyShip(Minimap map)
         {
             var hud = Hud.instance;
             if (hud == null) return;
 
-            if (!ReferenceEquals(hud, _hud))
+            if (!ReferenceEquals(hud, _shipHud))
             {
-                _hud = hud;
+                _shipHud = hud;
                 FindShipPanels(hud, out var wind, out var sail);
                 _wind.Track(wind);
                 _sail.Track(sail);
+            }
+
+            bool showing = hud.m_shipHudRoot != null && hud.m_shipHudRoot.activeInHierarchy;
+            _wind.Update(map, Plugin.MoveShipDisplay.Value, showing);
+            _sail.Update(map, Plugin.MoveShipDisplay.Value, showing);
+        }
+
+        public static void ApplyAuthor(Minimap map)
+        {
+            var hud = Hud.instance;
+            if (hud == null) return;
+
+            if (!ReferenceEquals(hud, _authorHud))
+            {
+                _authorHud = hud;
                 _author.Track(hud.m_hoveredPieceAuthorWindow != null
                     ? hud.m_hoveredPieceAuthorWindow.transform as RectTransform
                     : null);
             }
 
-            bool shipShowing = hud.m_shipHudRoot != null && hud.m_shipHudRoot.activeInHierarchy;
-            _wind.Update(map, Plugin.MoveShipDisplay.Value, shipShowing);
-            _sail.Update(map, Plugin.MoveShipDisplay.Value, shipShowing);
             _author.Update(map, Plugin.MoveAuthorBox.Value, _author.IsShowing);
         }
 
-        public static void Restore()
+        public static void RestoreShip()
         {
             _wind.Restore();
             _sail.Restore();
-            _author.Restore();
         }
+
+        public static void RestoreAuthor() => _author.Restore();
 
         /// <summary>
         /// The children of the ship HUD that hold the wind indicator and the sail and rudder status.
