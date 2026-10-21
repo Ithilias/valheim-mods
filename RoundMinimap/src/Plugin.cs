@@ -275,7 +275,7 @@ namespace RoundMinimap
             BiomeShadowOffset = Config.Bind("7 - Biome label", "Shadow offset", 2f,
                 new ConfigDescription("Pixels the shadow is moved down from the box.",
                     new AcceptableValueRange<float>(-20f, 20f)));
-            BiomeShadowColor = Config.Bind("7 - Biome label", "Shadow color", new Color(0f, 0f, 0f, 0.6f),
+            BiomeShadowColor = Config.Bind("7 - Biome label", "Shadow color", new Color(0f, 0f, 0f, 0.8f),
                 "Colour of the shadow. The last two hex digits are its opacity at the box's edge.");
 
             DumpHierarchyKey = Config.Bind("9 - Debug", "Dump hierarchy key",

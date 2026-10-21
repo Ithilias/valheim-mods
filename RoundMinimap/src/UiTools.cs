@@ -137,9 +137,10 @@ namespace RoundMinimap
                     float outside = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude;
                     float d = outside + Mathf.Min(Mathf.Max(qx, qy), 0f) - r;
 
-                    // Same quadratic falloff as the map's rim shadow.
+                    // Linear: the HUD's blending already makes faint alpha fainter still, and a
+                    // quadratic ramp left almost nothing visible past the box's edge.
                     float t = Mathf.Clamp01(1f - d / spread);
-                    px[y * size + x] = new Color32(255, 255, 255, (byte)(t * t * 255f));
+                    px[y * size + x] = new Color32(255, 255, 255, (byte)(t * 255f));
                 }
             }
             tex.SetPixels32(px);

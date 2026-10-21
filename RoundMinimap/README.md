@@ -137,7 +137,7 @@ turn it on.
 | Border color | warm white | |
 | Shadow size | `0` | Soft drop shadow around the box. `0` for none. Also works without a background colour |
 | Shadow offset | `2` | Moves the shadow down. Negative moves it up |
-| Shadow color | black, 60% | |
+| Shadow color | black, 80% | |
 
 ### 8 - Status effects
 
