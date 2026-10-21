@@ -36,6 +36,12 @@ namespace RoundMinimap
             float thickness = Mathf.Max(0f, Plugin.BiomeBorderThickness.Value);
             float shadowSize = Mathf.Max(0f, Plugin.BiomeShadowSize.Value);
             bool drawRing = thickness > 0f && ringColour.a > 0.001f;
+            if (drawRing && Plugin.BiomeBorderFollowsMap.Value)
+            {
+                // Only the colour follows; the opacity, and so drawRing, stays this section's.
+                Color mapBorder = MinimapShape.BorderColour(map);
+                ringColour = new Color(mapBorder.r, mapBorder.g, mapBorder.b, ringColour.a);
+            }
             bool drawShadow = shadowSize > 0f && shadowColour.a > 0.001f;
 
             if (label == null || (fillColour.a <= 0.001f && !drawRing && !drawShadow))
