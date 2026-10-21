@@ -90,8 +90,8 @@ namespace RoundMinimap
                     continue;
                 }
 
-                // The clone carries whatever font the label shows now; start from its original.
-                HudFonts.Apply(text, Plugin.CompassFont.Value,
+                // The clone carries whatever font the label shows now; start from the label's own.
+                HudFonts.Set(text, Plugin.CompassFont.Value,
                     BiomeLabelFont.OriginalFont ?? text.font,
                     BiomeLabelFont.OriginalFont != null ? BiomeLabelFont.OriginalMaterial : text.fontSharedMaterial);
                 text.text = letters[i];

@@ -39,6 +39,7 @@ namespace RoundMinimap
                     MinimapZoom.ResetState();
                     BiomeLabelStyle.ResetState();
                     BiomeLabelFont.ResetState();
+                    HudFonts.ResetState();
                     _appliedHiddenElements = null;
                 }
 

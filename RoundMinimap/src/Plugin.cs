@@ -252,8 +252,9 @@ namespace RoundMinimap
             CompassColor = Config.Bind("5 - Compass", "Compass color", new Color(0.96f, 0.93f, 0.85f, 0.9f),
                 "Colour of the compass letters.");
             CompassFont = Config.Bind("5 - Compass", "Compass font", HudFont.Default,
-                "Font of the compass letters, from the fonts the game ships. Default is the biome label's " +
-                "own font; Norse and NorseBold are the runic looking header lettering.");
+                "Font of the compass letters, from the fonts the game ships. Norse and NorseBold are the " +
+                "runic-looking header lettering. Default is the game's own biome label font; it does not " +
+                "follow 7 - Biome label / Font. Letters a font lacks come from the game's standard font.");
 
             BiomeBackgroundColor = Config.Bind("7 - Biome label", "Background color", new Color(0f, 0f, 0f, 0f),
                 "Colour of a box drawn behind the biome name, to keep it readable over bright ground. " +
@@ -279,8 +280,9 @@ namespace RoundMinimap
                 "colour is at its default, it follows the vanilla map frame, so recolouring by mods such as " +
                 "Seasons carries over. The opacity still comes from this section's Border color.");
             BiomeFont = Config.Bind("7 - Biome label", "Font", HudFont.Default,
-                "Font of the biome name, from the fonts the game ships. Norse and NorseBold are the runic " +
-                "looking header lettering.");
+                "Font of the biome name, from the fonts the game ships. Norse and NorseBold are the " +
+                "runic-looking header lettering. Default leaves the font alone. Letters a font lacks come " +
+                "from the game's standard font.");
             BiomeShadowSize = Config.Bind("7 - Biome label", "Shadow size", 0f,
                 new ConfigDescription("Width in pixels of a soft drop shadow around the box. 0 draws none. " +
                     "Works without a background colour too, as a soft shade behind the name.",

@@ -112,7 +112,7 @@ Round map only.
 | Compass distance | `0.86` | How far out the letters sit |
 | Compass font size | `14` | |
 | Compass color | warm white | |
-| Compass font | `Default` | `Norse` and `NorseBold` are the runic looking header lettering. Also `AveriaSerif` and `AveriaSans`. `Default` is the biome label's font |
+| Compass font | `Default` | `Norse` and `NorseBold` are the runic-looking header lettering. Also `AveriaSerif` and `AveriaSans`. `Default` is the game's own biome label font and does not follow `7 - Biome label / Font` |
 
 ### 6 - Zoom
 
@@ -137,7 +137,7 @@ turn it on.
 | Border thickness | `0` | Border around the box. `0` for none. Also works without a background colour |
 | Border color | warm white | |
 | Border follows map border | `false` | Uses the colour of `3 - Shape / Border color` for this border too, so while that is at its default, seasonal colours from mods such as Seasons carry over. Opacity still comes from this section's `Border color` |
-| Font | `Default` | Font of the biome name: `Norse`, `NorseBold`, `AveriaSerif` or `AveriaSans` |
+| Font | `Default` | Font of the biome name: `Norse`, `NorseBold`, `AveriaSerif` or `AveriaSans`. Letters a font lacks come from the game's standard font |
 | Shadow size | `0` | Soft drop shadow around the box. `0` for none. Also works without a background colour |
 | Shadow offset | `2` | Moves the shadow down. Negative moves it up |
 | Shadow color | black, 80% | |
