@@ -38,6 +38,8 @@ namespace RoundMinimap
                     MinimapCompass.ResetState();
                     MinimapZoom.ResetState();
                     BiomeLabelStyle.ResetState();
+                    BiomeLabelFont.ResetState();
+                    HudFonts.ResetState();
                     _appliedHiddenElements = null;
                 }
 
@@ -84,7 +86,9 @@ namespace RoundMinimap
                     MinimapCompass.Remove();
                 }
 
-                // After the layout pass, which is what moves the biome label under the circle.
+                // After the layout pass, which is what moves the biome label under the circle. The
+                // font first, since the box is sized from the rendered text.
+                BiomeLabelFont.Apply(__instance);
                 BiomeLabelStyle.Apply(__instance);
 
                 // Last, so it measures the map where this frame left it.
@@ -145,6 +149,7 @@ namespace RoundMinimap
             if (MinimapShape.IsApplied) MinimapShape.Remove(map);
             if (MinimapCompass.IsApplied) MinimapCompass.Remove();
             BiomeLabelStyle.Remove();
+            BiomeLabelFont.Restore();
             MinimapShape.RestorePlacement(map);
             StatusEffectClearance.Restore();
             ShipHudClearance.Restore();

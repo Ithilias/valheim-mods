@@ -46,6 +46,7 @@ namespace RoundMinimap
                 mode.ToString(),
                 Plugin.CompassLetters.Value ?? string.Empty,
                 Plugin.CompassFontSize.Value.ToString("F1"),
+                Plugin.CompassFont.Value.ToString(),
                 radius.ToString("F1"));
 
             if (signature == _appliedSignature && (IsApplied || mode == CompassMode.Off))
@@ -89,6 +90,10 @@ namespace RoundMinimap
                     continue;
                 }
 
+                // The clone carries whatever font the label shows now; start from the label's own.
+                HudFonts.Set(text, Plugin.CompassFont.Value,
+                    BiomeLabelFont.OriginalFont ?? text.font,
+                    BiomeLabelFont.OriginalFont != null ? BiomeLabelFont.OriginalMaterial : text.fontSharedMaterial);
                 text.text = letters[i];
                 text.alignment = TextAlignmentOptions.Center;
                 text.fontSize = Plugin.CompassFontSize.Value;

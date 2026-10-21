@@ -14,6 +14,8 @@
 - New setting `Border follows map border` (section `7 - Biome label`): the biome label's border
   takes the colour of the map's border. While the map's `Border color` is at its default, seasonal
   colours from mods such as Seasons carry over to it too. Off by default.
+- New settings `Font` (section `7 - Biome label`) and `Compass font` (section `5 - Compass`) to use
+  one of the game's other fonts, such as the runic-looking Norse header lettering.
 
 ## 1.3.3
 - The round map's rim now follows the colour of the vanilla map frame while `Border color` is left
