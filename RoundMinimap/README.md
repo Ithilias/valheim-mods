@@ -94,7 +94,8 @@ Round map only.
 | --- | --- | --- |
 | Map offset X | `0` | Moves the whole map sideways, in pixels. Negative is left |
 | Map offset Y | `0` | Moves the whole map up or down, in pixels. Negative is down |
-| Move sailing display below map | `true` | While steering a ship, moves the sail and wind display down when a bigger or moved map would cover it |
+| Move sailing display below map | `true` | While steering a ship, moves the sail, rudder and wind display down when a bigger or moved map would cover it |
+| Move piece author box below map | `true` | Moves the box naming who built the piece you look at (game setting `Show build piece author`) down when a bigger or moved map would cover it |
 | Hide square background | `true` | Hides the square panel that would stick out past the circle |
 | Center biome label below map | `true` | |
 | Biome label gap | `8` | |

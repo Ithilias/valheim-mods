@@ -16,6 +16,11 @@
   colours from mods such as Seasons carry over to it too. Off by default.
 - New settings `Font` (section `7 - Biome label`) and `Compass font` (section `5 - Compass`) to use
   one of the game's other fonts, such as the runic-looking Norse header lettering.
+- The sail and rudder status shown while steering a ship now moves below a bigger map too. Before,
+  only the wind display did, and the sail status could be almost fully covered.
+- The box naming who built the piece you look at (game setting `Show build piece author`) now moves
+  below a bigger map. New setting `Move piece author box below map` (section `4 - Layout`), on by
+  default.
 
 ## 1.3.3
 - The round map's rim now follows the colour of the vanilla map frame while `Border color` is left
