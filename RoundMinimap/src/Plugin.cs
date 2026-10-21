@@ -306,11 +306,15 @@ namespace RoundMinimap
             if (_configFileChanged)
             {
                 _configFileChanged = false;
-                // Editors often write a file in several steps; wait until they are done.
-                _reloadConfigAt = Time.unscaledTime + 0.5f;
+                // Editors often write a file in several steps; wait until they are done. Kept short,
+                // since a save from inside the game in the meantime would write the old values back.
+                _reloadConfigAt = Time.unscaledTime + 0.25f;
             }
             if (_reloadConfigAt < 0f || Time.unscaledTime < _reloadConfigAt) return;
             _reloadConfigAt = -1f;
+            // Deleted, or briefly gone while an editor swaps in the new file; the new file raises
+            // its own event. BepInEx writes a fresh one the next time a setting is saved.
+            if (!File.Exists(Config.ConfigFilePath)) return;
 
             // A changed value would otherwise save the file straight back, rewriting what was just
             // written there and triggering another reload.
