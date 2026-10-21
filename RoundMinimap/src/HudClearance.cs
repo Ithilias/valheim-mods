@@ -133,12 +133,15 @@ namespace RoundMinimap
             if (BiomeLabelStyle.Panel != null && BiomeLabelStyle.Panel.gameObject.activeInHierarchy)
             {
                 below += Mathf.Max(0f, Plugin.BiomePaddingY.Value);
-                if (Plugin.BiomeShadowColor.Value.a > 0.001f)
+                // Same rule as BiomeLabelStyle for whether the shadow is drawn.
+                if (Plugin.BiomeShadowSize.Value > 0f && Plugin.BiomeShadowColor.Value.a > 0.001f)
                     below += Mathf.Max(0f, Plugin.BiomeShadowSize.Value + Plugin.BiomeShadowOffset.Value);
             }
 
-            Vector3 pivot = parent != null ? parent.TransformPoint(rect.localPosition) : rect.position;
-            return pivot.y + (rect.rect.yMin - below) * scale;
+            // Glyphs can reach below the rect (TMP overflows rather than clips). The text bounds are
+            // in the label's own space, which the pulse scales without changing them.
+            float bottom = Mathf.Min(rect.rect.yMin, label.textBounds.min.y);
+            return rect.position.y + (bottom - below) * scale;
         }
 
         /// <summary>One panel moved down by the map's growth, remembering where it was.</summary>
