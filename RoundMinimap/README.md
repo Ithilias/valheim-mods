@@ -98,6 +98,7 @@ Round map only.
 | Hide square background | `true` | Hides the square panel that would stick out past the circle |
 | Center biome label below map | `true` | |
 | Biome label gap | `8` | |
+| Biome label in front of map | `true` | Off draws the label and its box behind the map, so the map covers any part reaching into the circle. Mainly useful with `Center biome label below map` |
 | Pull wind marker inside circle | `true` | |
 | Wind marker distance | `0.8` | |
 | Hidden elements | `""` | Names of extra HUD pieces to hide, if something is left over |
@@ -123,7 +124,8 @@ Round map only.
 
 ### 7 - Biome label
 
-A box behind the biome name, off by default. Give it a background colour to turn it on.
+A box behind the biome name, off by default. Give it a background colour, a border or a shadow to
+turn it on.
 
 | Setting | Default | What it does |
 | --- | --- | --- |
@@ -133,6 +135,9 @@ A box behind the biome name, off by default. Give it a background colour to turn
 | Corner radius | `4` | `0` for square corners |
 | Border thickness | `0` | Border around the box. `0` for none. Also works without a background colour |
 | Border color | warm white | |
+| Shadow size | `0` | Soft drop shadow around the box. `0` for none. Also works without a background colour |
+| Shadow offset | `2` | Moves the shadow down. Negative moves it up |
+| Shadow color | black, 80% | |
 
 ### 8 - Status effects
 

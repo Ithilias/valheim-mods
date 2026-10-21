@@ -7,6 +7,10 @@
 - Pin names near the edge of the round map are now drawn over its rim instead of under it.
 - Changes to the config file, for example from a mod manager such as Gale or a text editor, now
   apply while the game is running.
+- New setting `Biome label in front of map` (section `4 - Layout`), on by default. Turn it off to
+  draw the biome label and its box behind the map instead.
+- The biome label box can have a soft drop shadow: new settings `Shadow size`, `Shadow offset` and
+  `Shadow color` in section `7 - Biome label`. Off by default.
 
 ## 1.3.3
 - The round map's rim now follows the colour of the vanilla map frame while `Border color` is left

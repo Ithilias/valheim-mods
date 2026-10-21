@@ -107,6 +107,48 @@ namespace RoundMinimap
                 SpriteMeshType.FullRect, new Vector4(border, border, border, border));
         }
 
+        /// <summary>
+        /// White nine-slice sprite for a soft shadow around a rounded box, tinted by the Image
+        /// colour. Full strength inside the box, fading out over <paramref name="spread"/> pixels
+        /// outside it. Drawn <paramref name="spread"/> larger than the box on every side.
+        /// </summary>
+        public static Sprite CreateRoundedShadowSprite(float radius, float spread)
+        {
+            int border = Mathf.CeilToInt(radius + spread) + 2;
+            int size = border * 2 + 1;
+            float half = size * 0.5f;
+            // The box's edge sits spread pixels in from the sprite's edge.
+            float boxHalf = half - spread;
+            float r = Mathf.Min(radius, boxHalf - 1f);
+
+            var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
+            {
+                name = "RoundMinimap_BiomeShadow",
+                wrapMode = TextureWrapMode.Clamp,
+                filterMode = FilterMode.Bilinear,
+            };
+            var px = new Color32[size * size];
+            for (int y = 0; y < size; y++)
+            {
+                for (int x = 0; x < size; x++)
+                {
+                    float qx = Mathf.Abs(x + 0.5f - half) - (boxHalf - r);
+                    float qy = Mathf.Abs(y + 0.5f - half) - (boxHalf - r);
+                    float outside = new Vector2(Mathf.Max(qx, 0f), Mathf.Max(qy, 0f)).magnitude;
+                    float d = outside + Mathf.Min(Mathf.Max(qx, qy), 0f) - r;
+
+                    // Linear: the HUD's blending already makes faint alpha fainter still, and a
+                    // quadratic ramp left almost nothing visible past the box's edge.
+                    float t = Mathf.Clamp01(1f - d / spread);
+                    px[y * size + x] = new Color32(255, 255, 255, (byte)(t * 255f));
+                }
+            }
+            tex.SetPixels32(px);
+            tex.Apply(false, false);
+            return Sprite.Create(tex, new Rect(0, 0, size, size), new Vector2(0.5f, 0.5f), 100f, 0,
+                SpriteMeshType.FullRect, new Vector4(border, border, border, border));
+        }
+
         public static string DumpHierarchy(Transform root)
         {
             var sb = new StringBuilder();

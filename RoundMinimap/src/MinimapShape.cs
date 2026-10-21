@@ -16,6 +16,8 @@ namespace RoundMinimap
     internal static class MinimapShape
     {
         private const string BorderName = "RoundMinimapBorder";
+        // Every object the mod adds to the minimap is named with this prefix.
+        private const string OwnNamePrefix = "RoundMinimap";
         private const int TextureSize = 512;
         private const string VanillaFrameSprite = "InputFieldBackground";
 
@@ -35,6 +37,9 @@ namespace RoundMinimap
         private static bool _biomeLabelSaved;
         private static RectPlacement _biomeLabelOriginal;
         private static TextAlignmentOptions _biomeAlignmentOriginal;
+        private static bool _biomeMovedBehind;
+        private static int _biomeIndexOriginal;
+        private static Transform _biomeNextOriginal;
 
         private static RectTransform _root;
         private static bool _rootCaptured;
@@ -358,6 +363,8 @@ namespace RoundMinimap
             _disabledGraphics.Clear();
             _windMarkerSaved = false;
             _biomeLabelSaved = false;
+            _biomeMovedBehind = false;
+            _biomeNextOriginal = null;
             _appliedLayout = null;
             _appliedCircleScale = 0f;
             _appliedBorderThickness = -1f;
@@ -446,6 +453,7 @@ namespace RoundMinimap
                 Plugin.HideSquareBackground.Value.ToString(),
                 Plugin.CenterBiomeLabel.Value.ToString(),
                 Plugin.BiomeLabelGap.Value.ToString("F2"),
+                Plugin.BiomeLabelInFront.Value.ToString(),
                 Plugin.PullWindMarkerIn.Value.ToString(),
                 Plugin.WindMarkerDistance.Value.ToString("F2"));
             if (signature == _appliedLayout && !geometryChanged) return;
@@ -455,6 +463,7 @@ namespace RoundMinimap
 
             if (Plugin.HideSquareBackground.Value) HideBackingPanels(map, mapRect);
             if (Plugin.CenterBiomeLabel.Value) CenterBiomeLabel(map, mapRect);
+            if (!Plugin.BiomeLabelInFront.Value) MoveBiomeLabelBehindMap(map, mapRect);
             if (Plugin.PullWindMarkerIn.Value) PullWindMarkerIn(map, mapRect);
         }
 
@@ -478,6 +487,21 @@ namespace RoundMinimap
                 map.m_biomeNameSmall.alignment = _biomeAlignmentOriginal;
                 _biomeLabelSaved = false;
             }
+
+            if (_biomeMovedBehind && map.m_biomeNameSmall != null)
+            {
+                var rect = map.m_biomeNameSmall.rectTransform;
+                if (_biomeNextOriginal != null && _biomeNextOriginal.parent == rect.parent)
+                {
+                    // Taking the label out first shifts everything after it down by one.
+                    int next = _biomeNextOriginal.GetSiblingIndex();
+                    rect.SetSiblingIndex(rect.GetSiblingIndex() < next ? next - 1 : next);
+                }
+                else
+                    rect.SetSiblingIndex(Mathf.Min(_biomeIndexOriginal, rect.parent.childCount - 1));
+            }
+            _biomeMovedBehind = false;
+            _biomeNextOriginal = null;
 
             _appliedLayout = null;
         }
@@ -561,6 +585,37 @@ namespace RoundMinimap
             rect.anchoredPosition = UiTools.CenterOnAnchoredPosition(parent, mapRect)
                                     + new Vector2(0f, -(Radius + Plugin.BiomeLabelGap.Value));
             label.alignment = TextAlignmentOptions.Top;
+        }
+
+        /// <summary>
+        /// Draws the biome label before the map instead of after it. The map's shader overwrites
+        /// whatever is beneath it, so the map then covers any part of the label reaching into the
+        /// circle. The label's box follows it (see <see cref="BiomeLabelStyle"/>).
+        /// </summary>
+        private static void MoveBiomeLabelBehindMap(Minimap map, RectTransform mapRect)
+        {
+            var label = map.m_biomeNameSmall;
+            if (label == null || label.rectTransform.parent != mapRect.parent) return;
+            var rect = label.rectTransform;
+
+            int index = rect.GetSiblingIndex();
+            int mapIndex = mapRect.GetSiblingIndex();
+            if (index < mapIndex) return;
+
+            // Remember the next vanilla sibling rather than the index: the mod's own rim, box and
+            // compass letters come and go in the meantime and would shift a stored index.
+            _biomeMovedBehind = true;
+            _biomeIndexOriginal = index;
+            _biomeNextOriginal = null;
+            var parent = rect.parent;
+            for (int i = index + 1; i < parent.childCount; i++)
+            {
+                var sibling = parent.GetChild(i);
+                if (sibling.name.StartsWith(OwnNamePrefix) || sibling == BiomeLabelStyle.Panel) continue;
+                _biomeNextOriginal = sibling;
+                break;
+            }
+            rect.SetSiblingIndex(mapIndex);
         }
 
         /// <summary>
