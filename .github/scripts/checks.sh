@@ -13,26 +13,56 @@ fail_at() { echo "::error file=$1,line=$2::$3"; failed=1; } # file, line, messag
 git rev-parse -q --verify "$base^{commit}" >/dev/null \
   || { echo "::error::base ref '$base' not found; run git fetch origin main"; exit 1; }
 
-# Every mod whose code or icon changed needs a higher version and a CHANGELOG entry for it:
-# a version already uploaded to Hexium cannot be uploaded again.
+# Versions and CHANGELOGs. A version already uploaded to Hexium cannot be uploaded again, and
+# the CHANGELOG ships in the zip. Changes collect under '## Unreleased' until a release pull
+# request bumps version_number and renames that section to the new version.
+mb="$(git merge-base "$base" HEAD)" \
+  || { echo "::error::no merge base with '$base'; the checkout needs full history (fetch-depth: 0)"; exit 1; }
+# Lines of the CHANGELOG section under '## <name>', up to the next '## ' heading, blanks dropped.
+section() { awk -v h="## $1" '$0 == h {p=1; next} /^## / {p=0} p' | grep -v '^[[:space:]]*$' || true; }
+at_base() { git show "$mb:$1" 2>/dev/null || true; } # empty if the file is new
+version_of() { grep -oP '"version_number"\s*:\s*"\K[^"]+' || true; }
+# The shared build files go into every DLL.
+shared="$(git diff --name-only "$base"...HEAD -- Directory.Build.props Directory.Build.targets)"
+
 for manifest in */manifest.json; do
   mod="$(dirname "$manifest")"
-  version="$(grep -oP '"version_number"\s*:\s*"\K[^"]+' "$manifest" || true)"
+  log="$mod/CHANGELOG.md"
+  [ -f "$log" ] || { fail "$log is missing"; continue; }
+  version="$(version_of <"$manifest")"
 
   [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
     || fail "$manifest: version_number '$version' is not Major.Minor.Patch"
-  grep -qE "^## ${version//./\\.}\$" "$mod/CHANGELOG.md" \
-    || fail "$mod/CHANGELOG.md has no '## $version' entry"
+
+  # Headings are '## x.y.z' or '## Unreleased', newest first, and the current version has one.
+  while read -r heading; do fail "$log: heading [$heading] is not '## Major.Minor.Patch' or '## Unreleased'"; done \
+    < <(grep -E '^## ' "$log" | grep -vE '^## ([0-9]+\.[0-9]+\.[0-9]+|Unreleased)$' || true)
+  grep -qxF "## $version" "$log" || fail "$log has no '## $version' entry"
+  first="$(grep -m1 '^## ' "$log" || true)"
+  [[ "$first" == "## Unreleased" || "$first" == "## $version" ]] \
+    || fail "$log: '$first' is on top; '## Unreleased' or '## $version' must come first"
+  if grep -qx '## Unreleased' "$log" && [ -z "$(section Unreleased <"$log")" ]; then
+    fail "$log: '## Unreleased' is empty; add an entry or remove the heading"
+  fi
 
   changed="$(git diff --name-only "$base"...HEAD -- "$mod/src" "$mod"/*.csproj "$mod/icon.png")"
-  if [ -n "$changed" ] && git cat-file -e "$base:$manifest" 2>/dev/null; then
-    old="$(git show "$base:$manifest" | grep -oP '"version_number"\s*:\s*"\K[^"]+' || true)"
+  old="$(at_base "$manifest" | version_of)"
+  if [ "$version" != "$old" ]; then
+    # Release: the version goes up and '## Unreleased' becomes the new version's entry.
     newest="$(printf '%s\n%s\n' "$old" "$version" | sort -V | tail -n1)"
-    if [ "$version" = "$old" ]; then
-      fail "$mod changed but its version is still $old; bump version_number in $manifest"
-    elif [ "$newest" != "$version" ]; then
-      fail "$mod: version_number $version is lower than $old on $base"
-    fi
+    [ "$newest" = "$version" ] || fail "$mod: version_number $version is lower than $old on $base"
+    ! grep -qx '## Unreleased' "$log" \
+      || fail "$mod releases $version but $log still has '## Unreleased'; rename it to '## $version'"
+    ! at_base "$log" | grep -qxF "## $version" \
+      || fail "$log: '## $version' already existed on $base; write a new entry for this release"
+    [ -n "$(section "$version" <"$log")" ] || fail "$log: the '## $version' entry is empty"
+  elif [ -n "$changed$shared" ]; then
+    # A change without a release must be described for players under '## Unreleased'.
+    what="$mod changed"
+    [ -n "$changed" ] || what="the shared build files changed, which rebuilds $mod,"
+    unreleased="$(section Unreleased <"$log")"
+    { [ -n "$unreleased" ] && [ "$unreleased" != "$(at_base "$log" | section Unreleased)" ]; } \
+      || fail "$what but the '## Unreleased' section of $log did not; describe the change there"
   fi
 done
 
