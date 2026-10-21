@@ -11,9 +11,10 @@ while [ $# -gt 0 ] && [ "$1" != "--" ]; do mods+=("${1%/}"); shift; done
 [ "${1:-}" = "--" ] && shift
 extra=("$@")
 
+all=0
 if [ ${#mods[@]} -eq 0 ]; then
   for manifest in */manifest.json; do mods+=("$(dirname "$manifest")"); done
-  rm -rf dist
+  all=1
 fi
 
 for mod in "${mods[@]}"; do
@@ -21,7 +22,7 @@ for mod in "${mods[@]}"; do
 done
 
 # The zip is what gets uploaded, CHANGELOG included, and a version can be uploaded only once:
-# never package changes that are not released yet. For test builds use dotnet build (README).
+# never package changes that are not released yet. Test builds go through dotnet build (README).
 for mod in "${mods[@]}"; do
   version="$(grep -oP '"version_number"\s*:\s*"\K[^"]+' "$mod/manifest.json" || true)"
   if grep -qx '## Unreleased' "$mod/CHANGELOG.md"; then
@@ -33,6 +34,8 @@ for mod in "${mods[@]}"; do
   [ -z "$(git status --porcelain -- "$mod")" ] \
     || echo "warning: $mod has uncommitted changes; the zip will not match what is committed." >&2
 done
+
+if [ "$all" -eq 1 ]; then rm -rf dist; fi
 
 for mod in "${mods[@]}"; do
   dotnet build "$mod" -c Release --nologo -v quiet "${extra[@]}"

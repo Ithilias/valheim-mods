@@ -16,7 +16,8 @@ git rev-parse -q --verify "$base^{commit}" >/dev/null \
 # Versions and CHANGELOGs. A version already uploaded to Hexium cannot be uploaded again, and
 # the CHANGELOG ships in the zip. Changes collect under '## Unreleased' until a release pull
 # request bumps version_number and renames that section to the new version.
-mb="$(git merge-base "$base" HEAD)"
+mb="$(git merge-base "$base" HEAD)" \
+  || { echo "::error::no merge base with '$base'; the checkout needs full history (fetch-depth: 0)"; exit 1; }
 # Lines of the CHANGELOG section under '## <name>', up to the next '## ' heading, blanks dropped.
 section() { awk -v h="## $1" '$0 == h {p=1; next} /^## / {p=0} p' | grep -v '^[[:space:]]*$' || true; }
 at_base() { git show "$mb:$1" 2>/dev/null || true; } # empty if the file is new
@@ -27,13 +28,14 @@ shared="$(git diff --name-only "$base"...HEAD -- Directory.Build.props Directory
 for manifest in */manifest.json; do
   mod="$(dirname "$manifest")"
   log="$mod/CHANGELOG.md"
+  [ -f "$log" ] || { fail "$log is missing"; continue; }
   version="$(version_of <"$manifest")"
 
   [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] \
     || fail "$manifest: version_number '$version' is not Major.Minor.Patch"
 
   # Headings are '## x.y.z' or '## Unreleased', newest first, and the current version has one.
-  while read -r heading; do fail "$log: heading '$heading' is not '## Major.Minor.Patch' or '## Unreleased'"; done \
+  while read -r heading; do fail "$log: heading [$heading] is not '## Major.Minor.Patch' or '## Unreleased'"; done \
     < <(grep -E '^## ' "$log" | grep -vE '^## ([0-9]+\.[0-9]+\.[0-9]+|Unreleased)$' || true)
   grep -qxF "## $version" "$log" || fail "$log has no '## $version' entry"
   first="$(grep -m1 '^## ' "$log" || true)"
@@ -43,7 +45,7 @@ for manifest in */manifest.json; do
     fail "$log: '## Unreleased' is empty; add an entry or remove the heading"
   fi
 
-  changed="$shared$(git diff --name-only "$base"...HEAD -- "$mod/src" "$mod"/*.csproj "$mod/icon.png")"
+  changed="$(git diff --name-only "$base"...HEAD -- "$mod/src" "$mod"/*.csproj "$mod/icon.png")"
   old="$(at_base "$manifest" | version_of)"
   if [ "$version" != "$old" ]; then
     # Release: the version goes up and '## Unreleased' becomes the new version's entry.
@@ -54,10 +56,13 @@ for manifest in */manifest.json; do
     ! at_base "$log" | grep -qxF "## $version" \
       || fail "$log: '## $version' already existed on $base; write a new entry for this release"
     [ -n "$(section "$version" <"$log")" ] || fail "$log: the '## $version' entry is empty"
-  elif [ -n "$changed" ]; then
+  elif [ -n "$changed$shared" ]; then
     # A change without a release must be described for players under '## Unreleased'.
-    [ "$(section Unreleased <"$log")" != "$(at_base "$log" | section Unreleased)" ] \
-      || fail "$mod changed but the '## Unreleased' section of $log did not; describe the change there"
+    what="$mod changed"
+    [ -n "$changed" ] || what="the shared build files changed, which rebuilds $mod,"
+    unreleased="$(section Unreleased <"$log")"
+    { [ -n "$unreleased" ] && [ "$unreleased" != "$(at_base "$log" | section Unreleased)" ]; } \
+      || fail "$what but the '## Unreleased' section of $log did not; describe the change there"
   fi
 done
 
