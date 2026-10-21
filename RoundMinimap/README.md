@@ -98,7 +98,7 @@ Round map only.
 | Hide square background | `true` | Hides the square panel that would stick out past the circle |
 | Center biome label below map | `true` | |
 | Biome label gap | `8` | |
-| Biome label in front of map | `true` | Off draws the label and its box behind the map, so the map covers any part reaching into the circle |
+| Biome label in front of map | `true` | Off draws the label and its box behind the map, so the map covers any part reaching into the circle. Mainly useful with `Center biome label below map` |
 | Pull wind marker inside circle | `true` | |
 | Wind marker distance | `0.8` | |
 | Hidden elements | `""` | Names of extra HUD pieces to hide, if something is left over |

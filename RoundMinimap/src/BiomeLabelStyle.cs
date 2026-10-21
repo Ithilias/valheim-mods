@@ -111,6 +111,9 @@ namespace RoundMinimap
 
         public static void Remove()
         {
+            DestroySprite(_shadow);
+            DestroySprite(_fill);
+            DestroySprite(_ring);
             if (_panel != null) Object.Destroy(_panel.gameObject);
             DropReferences();
         }

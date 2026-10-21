@@ -16,6 +16,8 @@ namespace RoundMinimap
     internal static class MinimapShape
     {
         private const string BorderName = "RoundMinimapBorder";
+        // Every object the mod adds to the minimap is named with this prefix.
+        private const string OwnNamePrefix = "RoundMinimap";
         private const int TextureSize = 512;
         private const string VanillaFrameSprite = "InputFieldBackground";
 
@@ -35,7 +37,9 @@ namespace RoundMinimap
         private static bool _biomeLabelSaved;
         private static RectPlacement _biomeLabelOriginal;
         private static TextAlignmentOptions _biomeAlignmentOriginal;
-        private static int _biomeIndexOriginal = -1;
+        private static bool _biomeMovedBehind;
+        private static int _biomeIndexOriginal;
+        private static Transform _biomeNextOriginal;
 
         private static RectTransform _root;
         private static bool _rootCaptured;
@@ -359,7 +363,8 @@ namespace RoundMinimap
             _disabledGraphics.Clear();
             _windMarkerSaved = false;
             _biomeLabelSaved = false;
-            _biomeIndexOriginal = -1;
+            _biomeMovedBehind = false;
+            _biomeNextOriginal = null;
             _appliedLayout = null;
             _appliedCircleScale = 0f;
             _appliedBorderThickness = -1f;
@@ -483,11 +488,20 @@ namespace RoundMinimap
                 _biomeLabelSaved = false;
             }
 
-            if (_biomeIndexOriginal >= 0 && map.m_biomeNameSmall != null)
+            if (_biomeMovedBehind && map.m_biomeNameSmall != null)
             {
-                map.m_biomeNameSmall.rectTransform.SetSiblingIndex(_biomeIndexOriginal);
-                _biomeIndexOriginal = -1;
+                var rect = map.m_biomeNameSmall.rectTransform;
+                if (_biomeNextOriginal != null && _biomeNextOriginal.parent == rect.parent)
+                {
+                    // Taking the label out first shifts everything after it down by one.
+                    int next = _biomeNextOriginal.GetSiblingIndex();
+                    rect.SetSiblingIndex(rect.GetSiblingIndex() < next ? next - 1 : next);
+                }
+                else
+                    rect.SetSiblingIndex(Mathf.Min(_biomeIndexOriginal, rect.parent.childCount - 1));
             }
+            _biomeMovedBehind = false;
+            _biomeNextOriginal = null;
 
             _appliedLayout = null;
         }
@@ -588,7 +602,19 @@ namespace RoundMinimap
             int mapIndex = mapRect.GetSiblingIndex();
             if (index < mapIndex) return;
 
+            // Remember the next vanilla sibling rather than the index: the mod's own rim, box and
+            // compass letters come and go in the meantime and would shift a stored index.
+            _biomeMovedBehind = true;
             _biomeIndexOriginal = index;
+            _biomeNextOriginal = null;
+            var parent = rect.parent;
+            for (int i = index + 1; i < parent.childCount; i++)
+            {
+                var sibling = parent.GetChild(i);
+                if (sibling.name.StartsWith(OwnNamePrefix) || sibling == BiomeLabelStyle.Panel) continue;
+                _biomeNextOriginal = sibling;
+                break;
+            }
             rect.SetSiblingIndex(mapIndex);
         }
 
