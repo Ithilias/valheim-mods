@@ -135,6 +135,7 @@ turn it on.
 | Corner radius | `4` | `0` for square corners |
 | Border thickness | `0` | Border around the box. `0` for none. Also works without a background colour |
 | Border color | warm white | |
+| Border follows map border | `false` | Gives this border the map border's colour, including seasonal colours from mods such as Seasons. Opacity still comes from `Border color` |
 | Shadow size | `0` | Soft drop shadow around the box. `0` for none. Also works without a background colour |
 | Shadow offset | `2` | Moves the shadow down. Negative moves it up |
 | Shadow color | black, 80% | |

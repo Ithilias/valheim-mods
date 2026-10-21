@@ -32,6 +32,11 @@ namespace RoundMinimap
             var label = map.m_biomeNameSmall;
             Color fillColour = Plugin.BiomeBackgroundColor.Value;
             Color ringColour = Plugin.BiomeBorderColor.Value;
+            if (Plugin.BiomeBorderFollowsMap.Value)
+            {
+                Color mapBorder = MinimapShape.BorderColour(map);
+                ringColour = new Color(mapBorder.r, mapBorder.g, mapBorder.b, ringColour.a);
+            }
             Color shadowColour = Plugin.BiomeShadowColor.Value;
             float thickness = Mathf.Max(0f, Plugin.BiomeBorderThickness.Value);
             float shadowSize = Mathf.Max(0f, Plugin.BiomeShadowSize.Value);

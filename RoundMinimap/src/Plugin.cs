@@ -54,6 +54,7 @@ namespace RoundMinimap
         internal static ConfigEntry<float> BiomeCornerRadius;
         internal static ConfigEntry<float> BiomeBorderThickness;
         internal static ConfigEntry<Color> BiomeBorderColor;
+        internal static ConfigEntry<bool> BiomeBorderFollowsMap;
         internal static ConfigEntry<float> BiomeShadowSize;
         internal static ConfigEntry<float> BiomeShadowOffset;
         internal static ConfigEntry<Color> BiomeShadowColor;
@@ -268,6 +269,9 @@ namespace RoundMinimap
                     new AcceptableValueRange<float>(0f, 8f)));
             BiomeBorderColor = Config.Bind("7 - Biome label", "Border color", new Color(0.96f, 0.93f, 0.85f, 0.8f),
                 "Colour of that border.");
+            BiomeBorderFollowsMap = Config.Bind("7 - Biome label", "Border follows map border", false,
+                "Give this border the colour of the map's own border (section 3 - Shape), including the " +
+                "colours mods such as Seasons give the map frame. Its opacity still comes from Border color.");
             BiomeShadowSize = Config.Bind("7 - Biome label", "Shadow size", 0f,
                 new ConfigDescription("Width in pixels of a soft drop shadow around the box. 0 draws none. " +
                     "Works without a background colour too, as a soft shade behind the name.",

@@ -413,11 +413,12 @@ namespace RoundMinimap
 
         /// <summary>
         /// The configured border colour, or, while its colour is left at the default, the colour of
-        /// the vanilla frame the round map replaces, as long as that frame still has its vanilla sprite. Mods that tint that frame, such as Seasons,
-        /// then carry over. The alpha always comes from the setting: the frame is a faint backing
-        /// panel, and its alpha would make a thin rim almost invisible.
+        /// the vanilla frame the round map replaces, as long as that frame still has its vanilla
+        /// sprite. Mods that tint that frame, such as Seasons, then carry over. The alpha always
+        /// comes from the setting: the frame is a faint backing panel, and its alpha would make a
+        /// thin rim almost invisible. The biome label's border can follow this colour too.
         /// </summary>
-        private static Color BorderColour(Minimap map)
+        internal static Color BorderColour(Minimap map)
         {
             Color configured = Plugin.BorderColor.Value;
             if (!SameRgb(configured, (Color)Plugin.BorderColor.DefaultValue)) return configured;
