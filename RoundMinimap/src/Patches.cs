@@ -94,8 +94,8 @@ namespace RoundMinimap
                 // Last, so it measures the map where this frame left it.
                 RunIsolated(ref _statusLayoutFailed, "Status effect layout", StatusEffectClearance.Apply, __instance,
                     StatusEffectClearance.Restore);
-                RunIsolated(ref _shipLayoutFailed, "Sailing display layout", ShipHudClearance.Apply, __instance,
-                    ShipHudClearance.Restore);
+                RunIsolated(ref _shipLayoutFailed, "Sailing display and author box layout", HudClearance.Apply, __instance,
+                    HudClearance.Restore);
             }
             catch (System.Exception e)
             {
@@ -152,7 +152,7 @@ namespace RoundMinimap
             BiomeLabelFont.Restore();
             MinimapShape.RestorePlacement(map);
             StatusEffectClearance.Restore();
-            ShipHudClearance.Restore();
+            HudClearance.Restore();
             if (!string.IsNullOrEmpty(_appliedHiddenElements))
             {
                 MinimapShape.ApplyHiddenElements(map, Split(_appliedHiddenElements), hidden: false);

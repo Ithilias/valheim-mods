@@ -37,6 +37,7 @@ namespace RoundMinimap
         internal static ConfigEntry<float> MapOffsetY;
         internal static ConfigEntry<bool> MakeRoomForStatusEffects;
         internal static ConfigEntry<bool> MoveShipDisplay;
+        internal static ConfigEntry<bool> MoveAuthorBox;
         internal static ConfigEntry<bool> StatusWrapRows;
         internal static ConfigEntry<int> StatusMinPerRow;
         internal static ConfigEntry<int> StatusIconsPerRow;
@@ -189,8 +190,11 @@ namespace RoundMinimap
                     "down, positive moves it up.",
                     new AcceptableValueRange<float>(-2000f, 2000f)));
             MoveShipDisplay = Config.Bind("4 - Layout", "Move sailing display below map", true,
-                "While steering a ship, move the sail and wind display down when a bigger or moved map " +
-                "would cover it, keeping the gap vanilla leaves.");
+                "While steering a ship, move the sail, rudder and wind display down when a bigger or moved " +
+                "map would cover it, keeping the gap vanilla leaves.");
+            MoveAuthorBox = Config.Bind("4 - Layout", "Move piece author box below map", true,
+                "Move the box naming who built the piece you look at (Settings, Gameplay, Show build piece " +
+                "author) down when a bigger or moved map would cover it, keeping the gap vanilla leaves.");
             HiddenElements = Config.Bind("4 - Layout", "Hidden elements", "",
                 "Comma-separated GameObject names under the small map root to hide outright, for anything " +
                 "'Hide square background' misses. Use the hierarchy dump key to find names.");
