@@ -1,3 +1,5 @@
+using System;
+using System.IO;
 using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
@@ -77,6 +79,9 @@ namespace RoundMinimap
         internal static ConfigEntry<KeyboardShortcut> DumpHierarchyKey;
 
         private Harmony _harmony;
+        private FileSystemWatcher _configWatcher;
+        private volatile bool _configFileChanged;
+        private float _reloadConfigAt = -1f;
 
         private void Awake()
         {
@@ -264,11 +269,80 @@ namespace RoundMinimap
             _harmony = new Harmony(Guid);
             _harmony.PatchAll(typeof(Patches));
 
+            WatchConfigFile();
+
             Log.LogInfo("Round Minimap loaded.");
+        }
+
+        /// <summary>
+        /// Reloads the config when the file changes on disk, so edits from a mod manager such as Gale
+        /// or a text editor apply without restarting the game.
+        /// </summary>
+        private void WatchConfigFile()
+        {
+            try
+            {
+                string path = Config.ConfigFilePath;
+                _configWatcher = new FileSystemWatcher(Path.GetDirectoryName(path), Path.GetFileName(path))
+                {
+                    NotifyFilter = NotifyFilters.LastWrite | NotifyFilters.Size | NotifyFilters.FileName,
+                };
+                _configWatcher.Changed += OnConfigFileChanged;
+                _configWatcher.Created += OnConfigFileChanged;
+                _configWatcher.Renamed += OnConfigFileChanged;
+                _configWatcher.EnableRaisingEvents = true;
+            }
+            catch (Exception e)
+            {
+                Log.LogWarning($"Not watching the config file for changes: {e.Message}");
+            }
+        }
+
+        // Called on a worker thread; the reload itself happens in Update on the main thread.
+        private void OnConfigFileChanged(object sender, FileSystemEventArgs e) => _configFileChanged = true;
+
+        private void Update()
+        {
+            if (_configFileChanged)
+            {
+                _configFileChanged = false;
+                // Editors often write a file in several steps; wait until they are done. Kept short,
+                // since a save from inside the game in the meantime would write the old values back.
+                _reloadConfigAt = Time.unscaledTime + 0.25f;
+            }
+            if (_reloadConfigAt < 0f || Time.unscaledTime < _reloadConfigAt) return;
+            _reloadConfigAt = -1f;
+            // Deleted, or briefly gone while an editor swaps in the new file; the new file raises
+            // its own event. BepInEx writes a fresh one the next time a setting is saved.
+            if (!File.Exists(Config.ConfigFilePath)) return;
+
+            // A changed value would otherwise save the file straight back, rewriting what was just
+            // written there and triggering another reload.
+            bool saveOnSet = Config.SaveOnConfigSet;
+            Config.SaveOnConfigSet = false;
+            try
+            {
+                Config.Reload();
+            }
+            catch (Exception e)
+            {
+                Log.LogWarning($"Could not reload the config file, retrying: {e.Message}");
+                _reloadConfigAt = Time.unscaledTime + 1f;
+            }
+            finally
+            {
+                Config.SaveOnConfigSet = saveOnSet;
+            }
         }
 
         private void OnDestroy()
         {
+            if (_configWatcher != null)
+            {
+                _configWatcher.EnableRaisingEvents = false;
+                _configWatcher.Dispose();
+                _configWatcher = null;
+            }
             _harmony?.UnpatchSelf();
         }
     }

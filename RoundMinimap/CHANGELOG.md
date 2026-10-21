@@ -5,6 +5,8 @@
   into the circle, for example with a small or negative `Biome label gap`, was partly hidden
   behind the map.
 - Pin names near the edge of the round map are now drawn over its rim instead of under it.
+- Changes to the config file, for example from a mod manager such as Gale or a text editor, now
+  apply while the game is running.
 
 ## 1.3.3
 - The round map's rim now follows the colour of the vanilla map frame while `Border color` is left
