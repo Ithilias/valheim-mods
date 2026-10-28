@@ -21,6 +21,7 @@ namespace RoundMinimap
         private static readonly MovedPanel _wind = new MovedPanel();
         private static readonly MovedPanel _sail = new MovedPanel();
         private static readonly MovedPanel _author = new MovedPanel();
+        private static readonly ScaledPanel _sailSize = new ScaledPanel();
 
         public static void ApplyShip(Minimap map)
         {
@@ -33,7 +34,10 @@ namespace RoundMinimap
                 FindShipPanels(hud, out var wind, out var sail);
                 _wind.Track(wind);
                 _sail.Track(sail);
+                _sailSize.Track(sail);
             }
+
+            _sailSize.Update(Plugin.SailIconSize.Value);
 
             bool showing = hud.m_shipHudRoot != null && hud.m_shipHudRoot.activeInHierarchy;
             _wind.Update(map, Plugin.MoveShipDisplay.Value, showing);
@@ -60,6 +64,7 @@ namespace RoundMinimap
         {
             _wind.Restore();
             _sail.Restore();
+            _sailSize.Restore();
         }
 
         public static void RestoreAuthor() => _author.Restore();
@@ -132,7 +137,7 @@ namespace RoundMinimap
             float below = 0f;
             if (BiomeLabelStyle.Panel != null && BiomeLabelStyle.Panel.gameObject.activeInHierarchy)
             {
-                below += Mathf.Max(0f, Plugin.BiomePaddingY.Value);
+                below += Mathf.Max(0f, Plugin.BiomePaddingBottom.Value);
                 // Same rule as BiomeLabelStyle for whether the shadow is drawn.
                 if (Plugin.BiomeShadowSize.Value > 0f && Plugin.BiomeShadowColor.Value.a > 0.001f)
                     below += Mathf.Max(0f, Plugin.BiomeShadowSize.Value + Plugin.BiomeShadowOffset.Value);
@@ -142,6 +147,41 @@ namespace RoundMinimap
             // in the label's own space, which the pulse scales without changing them.
             float bottom = Mathf.Min(rect.rect.yMin, label.textBounds.min.y);
             return rect.position.y + (bottom - below) * scale;
+        }
+
+        /// <summary>One panel drawn at a multiple of its size, remembering the size it had.</summary>
+        private sealed class ScaledPanel
+        {
+            private RectTransform _panel;
+            private Vector3 _original;
+            private Vector3 _lastWritten;
+
+            public void Track(RectTransform panel)
+            {
+                _panel = panel;
+                if (_panel == null) return;
+                _original = _panel.localScale;
+                _lastWritten = _original;
+            }
+
+            public void Update(float factor)
+            {
+                if (_panel == null) return;
+                // Something else (a HUD mod) resized the panel: that is the new baseline.
+                if (_panel.localScale != _lastWritten) _original = _lastWritten = _panel.localScale;
+                Set(_original * factor);
+            }
+
+            public void Restore()
+            {
+                if (_panel != null) Set(_original);
+            }
+
+            private void Set(Vector3 scale)
+            {
+                if (_panel.localScale != scale) _panel.localScale = scale;
+                _lastWritten = scale;
+            }
         }
 
         /// <summary>One panel moved down by the map's growth, remembering where it was.</summary>

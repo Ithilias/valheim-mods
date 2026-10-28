@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+- New setting `Font size` (section `7 - Biome label`) for the biome name. `0`, the default, keeps
+  the game's own size.
+- `Padding vertical` (section `7 - Biome label`) is split into `Padding top` and `Padding bottom`,
+  so the box can reach further up, for example under the circle, while the name stays where it is.
+  Your old value is carried over to both.
+- New setting `Sail icon size` (section `4 - Layout`) to draw the sail and rudder icon bigger while
+  steering a ship. `1.5` fills the space between the map and the wind display.
+
 ## 1.4.1
 - The piece author box and the sailing display now also keep clear of the biome label when it sits
   centred under the round map. Before, the author box could cover the biome name.
