@@ -195,13 +195,13 @@ namespace RoundMinimap
             MoveShipDisplay = Config.Bind("4 - Layout", "Move sailing display below map", true,
                 "While steering a ship, move the sail, rudder and wind display down when a bigger or moved " +
                 "map would cover it, keeping the gap vanilla leaves.");
-            MoveAuthorBox = Config.Bind("4 - Layout", "Move piece author box below map", true,
-                "Move the box naming who built the piece you look at (Settings, Gameplay, Show build piece " +
-                "author) down when a bigger or moved map would cover it, keeping the gap vanilla leaves.");
             SailIconSize = Config.Bind("4 - Layout", "Sail icon size", 1f,
                 new ConfigDescription("Size of the sail and rudder icon shown while steering a ship, as a " +
                     "multiple of the vanilla size. 1.5 fills the space between the map and the wind display.",
                     new AcceptableValueRange<float>(0.5f, 2f)));
+            MoveAuthorBox = Config.Bind("4 - Layout", "Move piece author box below map", true,
+                "Move the box naming who built the piece you look at (Settings, Gameplay, Show build piece " +
+                "author) down when a bigger or moved map would cover it, keeping the gap vanilla leaves.");
             HiddenElements = Config.Bind("4 - Layout", "Hidden elements", "",
                 "Comma-separated GameObject names under the small map root to hide outright, for anything " +
                 "'Hide square background' misses. Use the hierarchy dump key to find names.");
@@ -337,12 +337,14 @@ namespace RoundMinimap
                 var old = new ConfigDefinition(section, oldKey);
                 if (orphans == null || !orphans.TryGetValue(old, out string text)) return;
                 orphans.Remove(old);
-                if (float.TryParse(text, System.Globalization.NumberStyles.Float,
+                Config.Save();
+                if (!float.TryParse(text, System.Globalization.NumberStyles.Float,
                         System.Globalization.CultureInfo.InvariantCulture, out float value))
                 {
-                    foreach (var entry in into) entry.Value = value;
+                    Log.LogWarning($"Dropped '{section} / {oldKey}': '{text}' is not a number.");
+                    return;
                 }
-                Config.Save();
+                foreach (var entry in into) entry.Value = value;
                 Log.LogInfo($"Moved '{section} / {oldKey}' ({text}) over to its replacements.");
             }
             catch (Exception e)
