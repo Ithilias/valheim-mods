@@ -116,16 +116,20 @@ namespace RoundMinimap
     }
 
     /// <summary>
-    /// The biome label's font. The mod only touches it when the setting changes: with Default it
-    /// leaves the label alone, so other mods that set fonts are not fought every frame. The font
-    /// the label had when the mod first changed it is kept, so Default and turning the mod off can
-    /// put it back, and so the compass letters cloned from the label can start from it.
+    /// The biome label's font and font size. The mod only touches them when a setting changes: with
+    /// Default and 0 it leaves the label alone, so other mods that set fonts are not fought every
+    /// frame. The font the label had when the mod first changed it is kept, so Default and turning
+    /// the mod off can put it back, and so the compass letters cloned from the label can start from
+    /// it. The same goes for the size.
     /// </summary>
     internal static class BiomeLabelFont
     {
         private static TMP_Text _label;
         private static HudFont _handled;
         private static bool _applied;
+        private static float _handledSize;
+        private static float _originalSize;
+        private static bool _sizeApplied;
 
         /// <summary>The label's font before the mod changed it, or null while it has not.</summary>
         public static TMP_FontAsset OriginalFont { get; private set; }
@@ -136,20 +140,33 @@ namespace RoundMinimap
             var label = map.m_biomeNameSmall;
             if (label == null) return;
             HudFont wanted = Plugin.BiomeFont.Value;
-            if (label == _label && wanted == _handled) return;
+            float wantedSize = Mathf.Max(0f, Plugin.BiomeFontSize.Value);
+            if (label == _label && wanted == _handled && wantedSize == _handledSize) return;
 
             if (label != _label)
             {
                 _label = label;
                 _applied = false;
+                _sizeApplied = false;
                 OriginalFont = null;
                 OriginalMaterial = null;
+                // Forces both to be looked at for the new label.
+                _handled = (HudFont)(-1);
+                _handledSize = -1f;
             }
+
+            if (wantedSize != _handledSize)
+            {
+                _handledSize = wantedSize;
+                ApplySize(label, wantedSize);
+            }
+
+            if (wanted == _handled) return;
             _handled = wanted;
 
             if (wanted == HudFont.Default)
             {
-                Restore();
+                RestoreFont();
                 return;
             }
 
@@ -160,10 +177,36 @@ namespace RoundMinimap
             }
             HudFonts.Set(label, wanted, OriginalFont, OriginalMaterial);
             _applied = true;
+            // The label's box is sized from the rendered text later this frame.
+            label.ForceMeshUpdate();
         }
 
-        /// <summary>Puts the original font back if the mod changed it.</summary>
+        private static void ApplySize(TMP_Text label, float size)
+        {
+            if (size <= 0f)
+            {
+                RestoreSize();
+            }
+            else
+            {
+                if (!_sizeApplied) _originalSize = label.fontSize;
+                _sizeApplied = true;
+                if (label.fontSize != size) label.fontSize = size;
+            }
+            label.ForceMeshUpdate();
+        }
+
+        /// <summary>Puts the original font and size back if the mod changed them.</summary>
         public static void Restore()
+        {
+            RestoreFont();
+            RestoreSize();
+            // Applied again from scratch if the mod is switched back on.
+            _handled = (HudFont)(-1);
+            _handledSize = -1f;
+        }
+
+        private static void RestoreFont()
         {
             if (_applied && _label != null) HudFonts.Set(_label, HudFont.Default, OriginalFont, OriginalMaterial);
             _applied = false;
@@ -171,11 +214,18 @@ namespace RoundMinimap
             OriginalMaterial = null;
         }
 
+        private static void RestoreSize()
+        {
+            if (_sizeApplied && _label != null) _label.fontSize = _originalSize;
+            _sizeApplied = false;
+        }
+
         /// <summary>Drops references after the minimap HUD has been destroyed and rebuilt.</summary>
         public static void ResetState()
         {
             _label = null;
             _applied = false;
+            _sizeApplied = false;
             OriginalFont = null;
             OriginalMaterial = null;
         }

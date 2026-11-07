@@ -23,6 +23,10 @@ namespace RoundMinimap
 
         private static CircleMeshEffect _effect;
         private static GameObject _border;
+        private static Image _borderShadow;
+        private static Image _borderRing;
+        // Kept apart from the images: textures outlive the HUD objects and are freed by hand.
+        private static readonly List<Sprite> _borderSprites = new List<Sprite>();
         private static float _appliedSizeMultiplier;
         private static bool _sizeCaptured;
         private static Vector2 _originalMapSize;
@@ -115,8 +119,8 @@ namespace RoundMinimap
             }
             if (_border != null)
             {
-                var borderImage = _border.GetComponent<Image>();
-                if (borderImage != null) borderImage.color = BorderColour(map);
+                if (_borderRing != null) _borderRing.color = BorderColour(map);
+                if (_borderShadow != null) _borderShadow.color = Plugin.BorderShadowColor.Value;
             }
 
             ApplyLayout(map, mapRect, freshEffect || circleScale != _appliedCircleScale);
@@ -360,6 +364,9 @@ namespace RoundMinimap
             _appliedPlacement = null;
             _effect = null;
             _border = null;
+            _borderShadow = null;
+            _borderRing = null;
+            DestroyBorderSprites();
             _disabledGraphics.Clear();
             _windMarkerSaved = false;
             _biomeLabelSaved = false;
@@ -401,14 +408,38 @@ namespace RoundMinimap
             // also draws over the rim.
             rect.SetSiblingIndex(mapRect.GetSiblingIndex() + 1);
 
-            var borderImage = _border.GetComponent<Image>();
-            borderImage.sprite = UiTools.CreateBorderSprite(
+            // The shadow is the border object's own image and the ring a child drawn over it, so
+            // each can have its own colour.
+            _borderShadow = _border.GetComponent<Image>();
+            _borderShadow.raycastTarget = false;
+            if (shadow > 0f)
+                _borderShadow.sprite = CreateBorderSprite(radius, thickness, shadow, texelsPerPixel, ring: false);
+            else
+                _borderShadow.enabled = false;
+
+            var ringObject = new GameObject("Ring", typeof(RectTransform), typeof(CanvasRenderer), typeof(Image));
+            var ringRect = (RectTransform)ringObject.transform;
+            ringRect.SetParent(rect, false);
+            ringRect.anchorMin = Vector2.zero;
+            ringRect.anchorMax = Vector2.one;
+            ringRect.offsetMin = ringRect.offsetMax = Vector2.zero;
+            _borderRing = ringObject.GetComponent<Image>();
+            _borderRing.raycastTarget = false;
+            _borderRing.sprite = CreateBorderSprite(radius, thickness, shadow, texelsPerPixel, ring: true);
+        }
+
+        private static Sprite CreateBorderSprite(float radius, float thickness, float shadow, float texelsPerPixel,
+            bool ring)
+        {
+            var sprite = UiTools.CreateBorderSprite(
                 TextureSize,
                 radius * texelsPerPixel,
                 thickness * texelsPerPixel,
                 shadow * texelsPerPixel,
-                Mathf.Clamp01(Plugin.BorderShadowStrength.Value));
-            borderImage.raycastTarget = false;
+                Mathf.Clamp01(Plugin.BorderShadowStrength.Value),
+                ring);
+            _borderSprites.Add(sprite);
+            return sprite;
         }
 
         /// <summary>
@@ -441,9 +472,25 @@ namespace RoundMinimap
 
         private static void RemoveBorder()
         {
+            if (_borderShadow != null) _borderShadow.sprite = null;
+            if (_borderRing != null) _borderRing.sprite = null;
+            DestroyBorderSprites();
+            _borderShadow = null;
+            _borderRing = null;
             if (_border == null) return;
             Object.Destroy(_border);
             _border = null;
+        }
+
+        private static void DestroyBorderSprites()
+        {
+            foreach (var sprite in _borderSprites)
+            {
+                if (sprite == null) continue;
+                if (sprite.texture != null) Object.Destroy(sprite.texture);
+                Object.Destroy(sprite);
+            }
+            _borderSprites.Clear();
         }
 
         // ---- surrounding HUD layout ----

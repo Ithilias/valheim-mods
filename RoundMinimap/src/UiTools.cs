@@ -16,12 +16,13 @@ namespace RoundMinimap
         }
 
         /// <summary>
-        /// Dark rim for the circle's edge: a solid ring drawn just inside <paramref name="circleRadius"/>
-        /// so it covers the mesh's polygonal edge, plus a soft shadow fading outwards.
-        /// All radii are in texture pixels.
+        /// Rim for the circle's edge, white so the Image colour tints it. With <paramref name="ring"/>
+        /// it is a solid ring drawn just inside <paramref name="circleRadius"/> so it covers the
+        /// mesh's polygonal edge; without, it is the soft shadow fading outwards from there, which
+        /// gets its own colour. All radii are in texture pixels.
         /// </summary>
         public static Sprite CreateBorderSprite(int size, float circleRadius, float thickness,
-            float shadow, float shadowStrength)
+            float shadow, float shadowStrength, bool ring)
         {
             var tex = new Texture2D(size, size, TextureFormat.RGBA32, false)
             {
@@ -41,16 +42,18 @@ namespace RoundMinimap
                     float d = Mathf.Sqrt(dx * dx + dy * dy);
 
                     float alpha;
-                    if (d <= circleRadius)
+                    if (ring && d <= circleRadius)
                     {
                         // Solid ring, feathered on its inner edge so it blends into the map.
                         alpha = Mathf.Clamp01((d - inner) / 1.5f);
                     }
-                    else if (shadow > 0f)
+                    else if (!ring && d > circleRadius - 1f && shadow > 0f)
                     {
-                        // Shadow falls off quadratically, which reads softer than a linear ramp.
-                        float t = Mathf.Clamp01(1f - (d - circleRadius) / shadow);
-                        alpha = t * t * shadowStrength;
+                        // Linear falloff, so a wide shadow stays visible a fair way out, e.g. on the
+                        // biome label below. It starts a texel under the ring, so filtering leaves no
+                        // light seam between them.
+                        float t = Mathf.Clamp01(1f - Mathf.Max(0f, d - circleRadius) / shadow);
+                        alpha = t * shadowStrength;
                     }
                     else
                     {

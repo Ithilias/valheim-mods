@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.5.0
+- New setting `Font size` (section `7 - Biome label`) for the biome name. `0`, the default, keeps
+  the game's own size.
+- `Padding vertical` (section `7 - Biome label`) is split into `Padding top` and `Padding bottom`,
+  so the box can reach further up, for example under the circle, while the name stays where it is.
+  Your old value is carried over to both.
+- New setting `Sail icon size` (section `4 - Layout`) to draw the sail and rudder icon bigger while
+  steering a ship. It grows downwards, and the wind display moves down to make room.
+- The sailing display now also moves sideways with a bigger or moved map, so it stays centred under
+  it, as in vanilla. Part of `Move sailing display below map`.
+- New setting `Border shadow color` (section `3 - Shape`). The rim's shadow used to take the rim's
+  colour, so with Seasons it was green; it is now black by default. With `Biome label in front of
+  map` off, the shadow falls on the biome label's box too, which with a bigger `Border shadow` and a
+  lighter box makes the box look tucked under the map.
+- The rim's shadow now fades out evenly instead of mostly right at the edge, so it reaches further
+  and is a little stronger than before. `Border shadow` now goes up to 64 pixels.
+
 ## 1.4.1
 - The piece author box and the sailing display now also keep clear of the biome label when it sits
   centred under the round map. Before, the author box could cover the biome name.

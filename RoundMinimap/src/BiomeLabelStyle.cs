@@ -89,10 +89,12 @@ namespace RoundMinimap
             if (_panel.gameObject.activeSelf != visible) _panel.gameObject.SetActive(visible);
             if (!visible) return;
 
-            var padding = new Vector2(Plugin.BiomePaddingX.Value, Plugin.BiomePaddingY.Value);
+            float top = Plugin.BiomePaddingTop.Value;
+            float bottom = Plugin.BiomePaddingBottom.Value;
             Vector2 local = parent.InverseTransformPoint(labelRect.TransformPoint(text.center));
-            Vector2 position = local - parent.rect.center;
-            Vector2 size = Vector2.Scale(text.size, labelRect.localScale) + padding * 2f;
+            Vector2 position = local - parent.rect.center + new Vector2(0f, (top - bottom) / 2f);
+            Vector2 size = Vector2.Scale(text.size, labelRect.localScale)
+                           + new Vector2(Plugin.BiomePaddingX.Value * 2f, top + bottom);
             if (_panel.anchoredPosition != position) _panel.anchoredPosition = position;
             if (_panel.sizeDelta != size) _panel.sizeDelta = size;
 

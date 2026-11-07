@@ -86,7 +86,8 @@ Round map only.
 | Border thickness | `3` | Rim over the circle's edge. `0` for none |
 | Border shadow | `5` | Soft shadow fading outwards. `0` for none |
 | Border shadow strength | `0.5` | |
-| Border color | `0D0A08E6` (dark) | Colour and opacity of the rim and shadow. While the colour is left at the default, the rim follows the vanilla map frame, so mods that recolour it (e.g. Seasons) carry over. Any other colour is used as set. `7 - Biome label / Border follows map border` can use it too |
+| Border color | `0D0A08E6` (dark) | Colour and opacity of the rim. While the colour is left at the default, the rim follows the vanilla map frame, so mods that recolour it (e.g. Seasons) carry over. Any other colour is used as set. `7 - Biome label / Border follows map border` can use it too |
+| Border shadow color | `000000E6` (black) | Colour and opacity of the shadow. With `4 - Layout / Biome label in front of map` off, the shadow also falls on the biome label and its box |
 
 ### 4 - Layout
 
@@ -94,7 +95,8 @@ Round map only.
 | --- | --- | --- |
 | Map offset X | `0` | Moves the whole map sideways, in pixels. Negative is left |
 | Map offset Y | `0` | Moves the whole map up or down, in pixels. Negative is down |
-| Move sailing display below map | `true` | While steering a ship, moves the sail, rudder and wind display down when a bigger or moved map would cover it |
+| Move sailing display below map | `true` | While steering a ship, moves the sail, rudder and wind display down when a bigger or moved map would cover it, and sideways so it stays centred under the map |
+| Sail icon size | `1` | Size of the sail and rudder icon while steering a ship, as a multiple of the vanilla size. It grows downwards and the wind display moves down to make room |
 | Move piece author box below map | `true` | Moves the box naming who built the piece you look at (game setting `Show build piece author`) down when a bigger or moved map would cover it |
 | Hide square background | `true` | Hides the square panel that would stick out past the circle |
 | Center biome label below map | `true` | |
@@ -133,12 +135,14 @@ turn it on.
 | --- | --- | --- |
 | Background color | none | Colour and opacity of the box. The last two hex digits are opacity, `00` draws nothing. `000000AA` is a dark see-through box |
 | Padding horizontal | `8` | Space left and right of the name |
-| Padding vertical | `3` | Space above and below the name |
+| Padding top | `3` | Space above the name |
+| Padding bottom | `3` | Space below the name |
 | Corner radius | `4` | `0` for square corners |
 | Border thickness | `0` | Border around the box. `0` for none. Also works without a background colour |
 | Border color | warm white | |
 | Border follows map border | `false` | Uses the colour of `3 - Shape / Border color` for this border too, so while that is at its default, seasonal colours from mods such as Seasons carry over. Opacity still comes from this section's `Border color` |
 | Font | `Default` | Font of the biome name: `Norse`, `NorseBold`, `AveriaSerif` or `AveriaSans`. Letters a font lacks come from the game's standard font |
+| Font size | `0` | Size of the biome name. `0` keeps the game's own size (18) |
 | Shadow size | `0` | Soft drop shadow around the box. `0` for none. Also works without a background colour |
 | Shadow offset | `2` | Moves the shadow down. Negative moves it up |
 | Shadow color | black, 80% | |

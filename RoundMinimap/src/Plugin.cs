@@ -38,6 +38,7 @@ namespace RoundMinimap
         internal static ConfigEntry<bool> MakeRoomForStatusEffects;
         internal static ConfigEntry<bool> MoveShipDisplay;
         internal static ConfigEntry<bool> MoveAuthorBox;
+        internal static ConfigEntry<float> SailIconSize;
         internal static ConfigEntry<bool> StatusWrapRows;
         internal static ConfigEntry<int> StatusMinPerRow;
         internal static ConfigEntry<int> StatusIconsPerRow;
@@ -51,12 +52,14 @@ namespace RoundMinimap
         internal static ConfigEntry<float> StatusOffsetY;
         internal static ConfigEntry<Color> BiomeBackgroundColor;
         internal static ConfigEntry<float> BiomePaddingX;
-        internal static ConfigEntry<float> BiomePaddingY;
+        internal static ConfigEntry<float> BiomePaddingTop;
+        internal static ConfigEntry<float> BiomePaddingBottom;
         internal static ConfigEntry<float> BiomeCornerRadius;
         internal static ConfigEntry<float> BiomeBorderThickness;
         internal static ConfigEntry<Color> BiomeBorderColor;
         internal static ConfigEntry<bool> BiomeBorderFollowsMap;
         internal static ConfigEntry<HudFont> BiomeFont;
+        internal static ConfigEntry<float> BiomeFontSize;
         internal static ConfigEntry<float> BiomeShadowSize;
         internal static ConfigEntry<float> BiomeShadowOffset;
         internal static ConfigEntry<Color> BiomeShadowColor;
@@ -71,6 +74,7 @@ namespace RoundMinimap
         internal static ConfigEntry<float> BorderShadow;
         internal static ConfigEntry<float> BorderShadowStrength;
         internal static ConfigEntry<Color> BorderColor;
+        internal static ConfigEntry<Color> BorderShadowColor;
         internal static ConfigEntry<bool> HideSquareBackground;
         internal static ConfigEntry<bool> CenterBiomeLabel;
         internal static ConfigEntry<float> BiomeLabelGap;
@@ -153,15 +157,18 @@ namespace RoundMinimap
                     new AcceptableValueRange<float>(0f, 24f)));
             BorderShadow = Config.Bind("3 - Shape", "Border shadow", 5f,
                 new ConfigDescription("Width in pixels of the soft shadow fading outwards from the edge. 0 draws none. Round map only.",
-                    new AcceptableValueRange<float>(0f, 32f)));
+                    new AcceptableValueRange<float>(0f, 64f)));
             BorderShadowStrength = Config.Bind("3 - Shape", "Border shadow strength", 0.5f,
-                new ConfigDescription("Peak opacity of that shadow, relative to the border colour's alpha. Round map only.",
+                new ConfigDescription("Peak opacity of that shadow, relative to the opacity of Border shadow color. Round map only.",
                     new AcceptableValueRange<float>(0f, 1f)));
             BorderColor = Config.Bind("3 - Shape", "Border color", new Color(0.05f, 0.04f, 0.03f, 0.9f),
-                "Colour of the rim and its shadow. Round map only, but 7 - Biome label can use it too. " +
+                "Colour of the rim. Round map only, but 7 - Biome label can use it too. " +
                 "While the colour is left at this default, the rim takes the colour of the vanilla map " +
                 "frame instead, so mods that recolour that frame, such as Seasons, carry over. Any other " +
                 "colour, even one step off, is used as set. Its opacity is always used.");
+            BorderShadowColor = Config.Bind("3 - Shape", "Border shadow color", new Color(0f, 0f, 0f, 0.9f),
+                "Colour of the rim's shadow. With 4 - Layout / Biome label in front of map off, the shadow " +
+                "also falls on the biome label and its box. Round map only.");
 
             HideSquareBackground = Config.Bind("4 - Layout", "Hide square background", true,
                 "Switch off the graphics of any panel larger than the circle, so the vanilla square " +
@@ -191,7 +198,13 @@ namespace RoundMinimap
                     new AcceptableValueRange<float>(-2000f, 2000f)));
             MoveShipDisplay = Config.Bind("4 - Layout", "Move sailing display below map", true,
                 "While steering a ship, move the sail, rudder and wind display down when a bigger or moved " +
-                "map would cover it, keeping the gap vanilla leaves.");
+                "map would cover it, keeping the gap vanilla leaves, and sideways so it stays centred under " +
+                "the map.");
+            SailIconSize = Config.Bind("4 - Layout", "Sail icon size", 1f,
+                new ConfigDescription("Size of the sail and rudder icon shown while steering a ship, as a " +
+                    "multiple of the vanilla size. The icon grows downwards, and the wind display below it " +
+                    "moves down to make room.",
+                    new AcceptableValueRange<float>(0.5f, 2f)));
             MoveAuthorBox = Config.Bind("4 - Layout", "Move piece author box below map", true,
                 "Move the box naming who built the piece you look at (Settings, Gameplay, Show build piece " +
                 "author) down when a bigger or moved map would cover it, keeping the gap vanilla leaves.");
@@ -267,9 +280,13 @@ namespace RoundMinimap
             BiomePaddingX = Config.Bind("7 - Biome label", "Padding horizontal", 8f,
                 new ConfigDescription("Pixels of box to the left and right of the biome name.",
                     new AcceptableValueRange<float>(0f, 40f)));
-            BiomePaddingY = Config.Bind("7 - Biome label", "Padding vertical", 3f,
-                new ConfigDescription("Pixels of box above and below the biome name.",
+            BiomePaddingTop = Config.Bind("7 - Biome label", "Padding top", 3f,
+                new ConfigDescription("Pixels of box above the biome name.",
                     new AcceptableValueRange<float>(0f, 40f)));
+            BiomePaddingBottom = Config.Bind("7 - Biome label", "Padding bottom", 3f,
+                new ConfigDescription("Pixels of box below the biome name.",
+                    new AcceptableValueRange<float>(0f, 40f)));
+            MigrateSplitSetting("7 - Biome label", "Padding vertical", BiomePaddingTop, BiomePaddingBottom);
             BiomeCornerRadius = Config.Bind("7 - Biome label", "Corner radius", 4f,
                 new ConfigDescription("Roundness of the box's corners, in pixels. 0 is square.",
                     new AcceptableValueRange<float>(0f, 20f)));
@@ -287,6 +304,9 @@ namespace RoundMinimap
                 "Font of the biome name, from the fonts the game ships. Norse and NorseBold are the " +
                 "runic-looking header lettering. Default leaves the font alone. Letters a font lacks come " +
                 "from the game's standard font.");
+            BiomeFontSize = Config.Bind("7 - Biome label", "Font size", 0f,
+                new ConfigDescription("Font size of the biome name. 0 leaves the game's own size (18).",
+                    new AcceptableValueRange<float>(0f, 48f)));
             BiomeShadowSize = Config.Bind("7 - Biome label", "Shadow size", 0f,
                 new ConfigDescription("Width in pixels of a soft drop shadow around the box. 0 draws none. " +
                     "Works without a background colour too, as a soft shade behind the name.",
@@ -307,6 +327,36 @@ namespace RoundMinimap
             WatchConfigFile();
 
             Log.LogInfo("Round Minimap loaded.");
+        }
+
+        /// <summary>
+        /// Carries the value of a setting that was split in two over to both new ones, for configs
+        /// written before the split. BepInEx keeps keys it no longer knows as orphans, which is the
+        /// only place the old value is left.
+        /// </summary>
+        private void MigrateSplitSetting(string section, string oldKey, params ConfigEntry<float>[] into)
+        {
+            try
+            {
+                var orphans = AccessTools.Property(typeof(ConfigFile), "OrphanedEntries")
+                    ?.GetValue(Config) as System.Collections.Generic.Dictionary<ConfigDefinition, string>;
+                var old = new ConfigDefinition(section, oldKey);
+                if (orphans == null || !orphans.TryGetValue(old, out string text)) return;
+                orphans.Remove(old);
+                Config.Save();
+                if (!float.TryParse(text, System.Globalization.NumberStyles.Float,
+                        System.Globalization.CultureInfo.InvariantCulture, out float value))
+                {
+                    Log.LogWarning($"Dropped '{section} / {oldKey}': '{text}' is not a number.");
+                    return;
+                }
+                foreach (var entry in into) entry.Value = value;
+                Log.LogInfo($"Moved '{section} / {oldKey}' ({text}) over to its replacements.");
+            }
+            catch (Exception e)
+            {
+                Log.LogWarning($"Could not carry over '{section} / {oldKey}': {e.Message}");
+            }
         }
 
         /// <summary>
