@@ -74,6 +74,7 @@ namespace RoundMinimap
         internal static ConfigEntry<float> BorderShadow;
         internal static ConfigEntry<float> BorderShadowStrength;
         internal static ConfigEntry<Color> BorderColor;
+        internal static ConfigEntry<Color> BorderShadowColor;
         internal static ConfigEntry<bool> HideSquareBackground;
         internal static ConfigEntry<bool> CenterBiomeLabel;
         internal static ConfigEntry<float> BiomeLabelGap;
@@ -158,13 +159,16 @@ namespace RoundMinimap
                 new ConfigDescription("Width in pixels of the soft shadow fading outwards from the edge. 0 draws none. Round map only.",
                     new AcceptableValueRange<float>(0f, 32f)));
             BorderShadowStrength = Config.Bind("3 - Shape", "Border shadow strength", 0.5f,
-                new ConfigDescription("Peak opacity of that shadow, relative to the border colour's alpha. Round map only.",
+                new ConfigDescription("Peak opacity of that shadow, relative to the opacity of Border shadow color. Round map only.",
                     new AcceptableValueRange<float>(0f, 1f)));
             BorderColor = Config.Bind("3 - Shape", "Border color", new Color(0.05f, 0.04f, 0.03f, 0.9f),
-                "Colour of the rim and its shadow. Round map only, but 7 - Biome label can use it too. " +
+                "Colour of the rim. Round map only, but 7 - Biome label can use it too. " +
                 "While the colour is left at this default, the rim takes the colour of the vanilla map " +
                 "frame instead, so mods that recolour that frame, such as Seasons, carry over. Any other " +
                 "colour, even one step off, is used as set. Its opacity is always used.");
+            BorderShadowColor = Config.Bind("3 - Shape", "Border shadow color", new Color(0f, 0f, 0f, 0.9f),
+                "Colour of the rim's shadow. With 4 - Layout / Biome label in front of map off, the shadow " +
+                "also falls on the biome label and its box. Round map only.");
 
             HideSquareBackground = Config.Bind("4 - Layout", "Hide square background", true,
                 "Switch off the graphics of any panel larger than the circle, so the vanilla square " +
@@ -194,10 +198,12 @@ namespace RoundMinimap
                     new AcceptableValueRange<float>(-2000f, 2000f)));
             MoveShipDisplay = Config.Bind("4 - Layout", "Move sailing display below map", true,
                 "While steering a ship, move the sail, rudder and wind display down when a bigger or moved " +
-                "map would cover it, keeping the gap vanilla leaves.");
+                "map would cover it, keeping the gap vanilla leaves, and sideways so it stays centred under " +
+                "the map.");
             SailIconSize = Config.Bind("4 - Layout", "Sail icon size", 1f,
                 new ConfigDescription("Size of the sail and rudder icon shown while steering a ship, as a " +
-                    "multiple of the vanilla size. 1.5 fills the space between the map and the wind display.",
+                    "multiple of the vanilla size. The icon grows downwards, and the wind display below it " +
+                    "moves down to make room.",
                     new AcceptableValueRange<float>(0.5f, 2f)));
             MoveAuthorBox = Config.Bind("4 - Layout", "Move piece author box below map", true,
                 "Move the box naming who built the piece you look at (Settings, Gameplay, Show build piece " +

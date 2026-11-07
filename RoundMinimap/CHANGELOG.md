@@ -7,7 +7,13 @@
   so the box can reach further up, for example under the circle, while the name stays where it is.
   Your old value is carried over to both.
 - New setting `Sail icon size` (section `4 - Layout`) to draw the sail and rudder icon bigger while
-  steering a ship. `1.5` fills the space between the map and the wind display.
+  steering a ship. It grows downwards, and the wind display moves down to make room.
+- The sailing display now also moves sideways with a bigger or moved map, so it stays centred under
+  it, as in vanilla. Part of `Move sailing display below map`.
+- New setting `Border shadow color` (section `3 - Shape`). The rim's shadow used to take the rim's
+  colour, so with Seasons it was green; it is now black by default. With `Biome label in front of
+  map` off, the shadow falls on the biome label's box too, which with a bigger `Border shadow` and a
+  lighter box makes the box look tucked under the map.
 
 ## 1.4.1
 - The piece author box and the sailing display now also keep clear of the biome label when it sits

@@ -86,7 +86,8 @@ Round map only.
 | Border thickness | `3` | Rim over the circle's edge. `0` for none |
 | Border shadow | `5` | Soft shadow fading outwards. `0` for none |
 | Border shadow strength | `0.5` | |
-| Border color | `0D0A08E6` (dark) | Colour and opacity of the rim and shadow. While the colour is left at the default, the rim follows the vanilla map frame, so mods that recolour it (e.g. Seasons) carry over. Any other colour is used as set. `7 - Biome label / Border follows map border` can use it too |
+| Border color | `0D0A08E6` (dark) | Colour and opacity of the rim. While the colour is left at the default, the rim follows the vanilla map frame, so mods that recolour it (e.g. Seasons) carry over. Any other colour is used as set. `7 - Biome label / Border follows map border` can use it too |
+| Border shadow color | `000000E6` (black) | Colour and opacity of the shadow. With `4 - Layout / Biome label in front of map` off, the shadow also falls on the biome label and its box |
 
 ### 4 - Layout
 
@@ -94,8 +95,8 @@ Round map only.
 | --- | --- | --- |
 | Map offset X | `0` | Moves the whole map sideways, in pixels. Negative is left |
 | Map offset Y | `0` | Moves the whole map up or down, in pixels. Negative is down |
-| Move sailing display below map | `true` | While steering a ship, moves the sail, rudder and wind display down when a bigger or moved map would cover it |
-| Sail icon size | `1` | Size of the sail and rudder icon while steering a ship, as a multiple of the vanilla size. `1.5` fills the space between the map and the wind display |
+| Move sailing display below map | `true` | While steering a ship, moves the sail, rudder and wind display down when a bigger or moved map would cover it, and sideways so it stays centred under the map |
+| Sail icon size | `1` | Size of the sail and rudder icon while steering a ship, as a multiple of the vanilla size. It grows downwards and the wind display moves down to make room |
 | Move piece author box below map | `true` | Moves the box naming who built the piece you look at (game setting `Show build piece author`) down when a bigger or moved map would cover it |
 | Hide square background | `true` | Hides the square panel that would stick out past the circle |
 | Center biome label below map | `true` | |
