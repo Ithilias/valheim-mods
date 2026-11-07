@@ -157,7 +157,7 @@ namespace RoundMinimap
                     new AcceptableValueRange<float>(0f, 24f)));
             BorderShadow = Config.Bind("3 - Shape", "Border shadow", 5f,
                 new ConfigDescription("Width in pixels of the soft shadow fading outwards from the edge. 0 draws none. Round map only.",
-                    new AcceptableValueRange<float>(0f, 32f)));
+                    new AcceptableValueRange<float>(0f, 64f)));
             BorderShadowStrength = Config.Bind("3 - Shape", "Border shadow strength", 0.5f,
                 new ConfigDescription("Peak opacity of that shadow, relative to the opacity of Border shadow color. Round map only.",
                     new AcceptableValueRange<float>(0f, 1f)));

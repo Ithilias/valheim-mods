@@ -14,6 +14,8 @@
   colour, so with Seasons it was green; it is now black by default. With `Biome label in front of
   map` off, the shadow falls on the biome label's box too, which with a bigger `Border shadow` and a
   lighter box makes the box look tucked under the map.
+- The rim's shadow now fades out evenly instead of mostly right at the edge, so it reaches further
+  and is a little stronger than before. `Border shadow` now goes up to 64 pixels.
 
 ## 1.4.1
 - The piece author box and the sailing display now also keep clear of the biome label when it sits

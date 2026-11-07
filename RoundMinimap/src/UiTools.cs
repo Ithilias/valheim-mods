@@ -49,10 +49,11 @@ namespace RoundMinimap
                     }
                     else if (!ring && d > circleRadius - 1f && shadow > 0f)
                     {
-                        // Shadow falls off quadratically, which reads softer than a linear ramp. It
-                        // starts a texel under the ring, so filtering leaves no light seam between them.
+                        // Linear falloff, so a wide shadow stays visible a fair way out, e.g. on the
+                        // biome label below. It starts a texel under the ring, so filtering leaves no
+                        // light seam between them.
                         float t = Mathf.Clamp01(1f - Mathf.Max(0f, d - circleRadius) / shadow);
-                        alpha = t * t * shadowStrength;
+                        alpha = t * shadowStrength;
                     }
                     else
                     {
