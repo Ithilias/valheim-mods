@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.5.0
 - New setting `Font size` (section `7 - Biome label`) for the biome name. `0`, the default, keeps
   the game's own size.
 - `Padding vertical` (section `7 - Biome label`) is split into `Padding top` and `Padding bottom`,
