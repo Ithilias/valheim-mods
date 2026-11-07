@@ -25,6 +25,8 @@ namespace RoundMinimap
         private static GameObject _border;
         private static Image _borderShadow;
         private static Image _borderRing;
+        // Kept apart from the images: textures outlive the HUD objects and are freed by hand.
+        private static readonly List<Sprite> _borderSprites = new List<Sprite>();
         private static float _appliedSizeMultiplier;
         private static bool _sizeCaptured;
         private static Vector2 _originalMapSize;
@@ -364,6 +366,7 @@ namespace RoundMinimap
             _border = null;
             _borderShadow = null;
             _borderRing = null;
+            DestroyBorderSprites();
             _disabledGraphics.Clear();
             _windMarkerSaved = false;
             _biomeLabelSaved = false;
@@ -426,14 +429,18 @@ namespace RoundMinimap
         }
 
         private static Sprite CreateBorderSprite(float radius, float thickness, float shadow, float texelsPerPixel,
-            bool ring) =>
-            UiTools.CreateBorderSprite(
+            bool ring)
+        {
+            var sprite = UiTools.CreateBorderSprite(
                 TextureSize,
                 radius * texelsPerPixel,
                 thickness * texelsPerPixel,
                 shadow * texelsPerPixel,
                 Mathf.Clamp01(Plugin.BorderShadowStrength.Value),
                 ring);
+            _borderSprites.Add(sprite);
+            return sprite;
+        }
 
         /// <summary>
         /// The configured border colour, or, while its colour is left at the default, the colour of
@@ -465,8 +472,9 @@ namespace RoundMinimap
 
         private static void RemoveBorder()
         {
-            DestroySprite(_borderShadow);
-            DestroySprite(_borderRing);
+            if (_borderShadow != null) _borderShadow.sprite = null;
+            if (_borderRing != null) _borderRing.sprite = null;
+            DestroyBorderSprites();
             _borderShadow = null;
             _borderRing = null;
             if (_border == null) return;
@@ -474,12 +482,15 @@ namespace RoundMinimap
             _border = null;
         }
 
-        private static void DestroySprite(Image image)
+        private static void DestroyBorderSprites()
         {
-            if (image == null || image.sprite == null) return;
-            if (image.sprite.texture != null) Object.Destroy(image.sprite.texture);
-            Object.Destroy(image.sprite);
-            image.sprite = null;
+            foreach (var sprite in _borderSprites)
+            {
+                if (sprite == null) continue;
+                if (sprite.texture != null) Object.Destroy(sprite.texture);
+                Object.Destroy(sprite);
+            }
+            _borderSprites.Clear();
         }
 
         // ---- surrounding HUD layout ----

@@ -270,9 +270,13 @@ namespace RoundMinimap
 
                 float vanillaBottom = vanillaCentre.y - vanillaHalf.y;
                 float currentBottom = Mathf.Min(currentCentre.y - currentHalf.y, BiomeLabelBottom(map));
+                // A panel that follows the map sideways belongs to it wherever it goes, so that is
+                // decided by where vanilla put the map. Otherwise by where the map is now.
+                Vector3 centre = _followSideways ? vanillaCentre : currentCentre;
+                Vector2 half = _followSideways ? vanillaHalf : currentHalf;
                 bool underMap = panel.yMax <= vanillaCentre.y
-                                && panel.xMax > currentCentre.x - currentHalf.x
-                                && panel.xMin < currentCentre.x + currentHalf.x;
+                                && panel.xMax > centre.x - half.x
+                                && panel.xMin < centre.x + half.x;
 
                 var shift = extra;
                 if (underMap)
